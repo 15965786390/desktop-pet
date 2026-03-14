@@ -6,116 +6,117 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: #f5f5f7;
-    color: #1d1d1f;
-    padding: 24px;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', sans-serif;
+    background: #f2f2f7;
+    color: #1c1c1e;
+    padding: 28px 24px;
     overflow-y: auto;
+    -webkit-font-smoothing: antialiased;
   }
-  h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
-  .subtitle { font-size: 13px; color: #86868b; margin-bottom: 24px; }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.3px; }
+  .subtitle { font-size: 15px; color: #8e8e93; margin-bottom: 28px; }
 
   .section {
     background: #fff;
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    border-radius: 14px;
+    padding: 20px 22px;
+    margin-bottom: 20px;
+    box-shadow: 0 0.5px 1px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.04);
   }
   .section-title {
-    font-size: 14px; font-weight: 600; color: #86868b;
-    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px;
+    font-size: 13px; font-weight: 600; color: #8e8e93;
+    text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 18px;
   }
 
   /* Category tabs */
   .tab-bar {
-    display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
+    display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap;
   }
   .tab-btn {
-    padding: 6px 14px; border: none; border-radius: 16px;
-    background: #f0f0f2; font-size: 13px; cursor: pointer;
-    transition: all 0.15s; color: #666;
+    padding: 8px 16px; border: none; border-radius: 18px;
+    background: #f2f2f7; font-size: 14px; cursor: pointer;
+    transition: all 0.2s; color: #636366; font-weight: 500;
   }
   .tab-btn:hover { background: #e5e5ea; }
   .tab-btn.active { background: #007aff; color: #fff; font-weight: 600; }
 
   /* Pet grid */
-  .pet-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .pet-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
   .pet-card {
-    border: 2px solid #e5e5ea; border-radius: 12px; padding: 10px;
+    border: 2px solid #e5e5ea; border-radius: 14px; padding: 14px 10px;
     text-align: center; cursor: pointer; transition: all 0.2s ease; position: relative;
     background: #fafafa;
   }
-  .pet-card:hover { border-color: #007aff; background: #f0f7ff; }
+  .pet-card:hover { border-color: #007aff; background: #f0f7ff; transform: scale(1.02); }
   .pet-card.active { border-color: #007aff; background: #e8f2ff; }
-  .pet-card canvas, .pet-card .pet-img { width: 80px; height: 80px; display: block; margin: 0 auto 6px; }
+  .pet-card canvas, .pet-card .pet-img { width: 88px; height: 88px; display: block; margin: 0 auto 8px; }
   .pet-card .pet-name {
-    font-size: 12px; font-weight: 500; overflow: hidden;
-    text-overflow: ellipsis; white-space: nowrap; color: #555;
+    font-size: 13px; font-weight: 500; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap; color: #3a3a3c;
   }
   .pet-card .active-badge {
-    position: absolute; top: 6px; right: 6px;
-    background: #007aff; color: #fff; font-size: 9px;
-    padding: 2px 6px; border-radius: 8px;
+    position: absolute; top: 8px; right: 8px;
+    background: #007aff; color: #fff; font-size: 10px;
+    padding: 2px 8px; border-radius: 10px; font-weight: 600;
   }
   .pet-card .delete-btn {
-    position: absolute; top: 6px; left: 6px; background: #ff3b30; color: #fff;
-    border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 11px;
-    cursor: pointer; display: none; line-height: 18px;
+    position: absolute; top: 8px; left: 8px; background: #ff3b30; color: #fff;
+    border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px;
+    cursor: pointer; display: none; line-height: 20px;
   }
   .pet-card:hover .delete-btn { display: block; }
 
   .add-card {
-    border: 2px dashed #c7c7cc; border-radius: 12px; padding: 10px;
+    border: 2px dashed #c7c7cc; border-radius: 14px; padding: 14px;
     text-align: center; cursor: pointer; transition: all 0.2s ease;
     display: flex; flex-direction: column; align-items: center;
-    justify-content: center; min-height: 110px; background: transparent;
+    justify-content: center; min-height: 130px; background: transparent;
   }
   .add-card:hover { border-color: #007aff; background: #f0f7ff; }
-  .add-icon { font-size: 28px; color: #007aff; margin-bottom: 4px; }
-  .add-text { font-size: 12px; color: #007aff; font-weight: 500; }
+  .add-icon { font-size: 32px; color: #007aff; margin-bottom: 6px; }
+  .add-text { font-size: 13px; color: #007aff; font-weight: 500; }
 
   /* Settings */
-  .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
-  .setting-row + .setting-row { border-top: 1px solid #f0f0f0; }
-  .setting-label { font-size: 15px; }
-  .setting-value { font-size: 13px; color: #86868b; min-width: 40px; text-align: right; }
-  input[type="range"] { -webkit-appearance: none; width: 180px; height: 4px; background: #e5e5ea; border-radius: 2px; outline: none; }
-  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: #007aff; border-radius: 50%; cursor: pointer; }
-  .tips { font-size: 12px; color: #86868b; line-height: 1.6; margin-top: 8px; }
+  .setting-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; min-height: 44px; }
+  .setting-row + .setting-row { border-top: 1px solid rgba(60,60,67,0.06); }
+  .setting-label { font-size: 16px; color: #1c1c1e; }
+  .setting-value { font-size: 15px; color: #8e8e93; min-width: 48px; text-align: right; font-weight: 500; }
+  input[type="range"] { -webkit-appearance: none; width: 180px; height: 5px; background: #e5e5ea; border-radius: 2.5px; outline: none; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; background: #fff; border-radius: 50%; cursor: pointer; box-shadow: 0 0.5px 4px rgba(0,0,0,0.12), 0 0 0.5px rgba(0,0,0,0.12); }
+  .tips { font-size: 13px; color: #8e8e93; line-height: 1.7; margin-top: 10px; }
 
   /* Accessory system */
-  .acc-tabs { display: flex; gap: 0; margin-bottom: 12px; border-bottom: 1px solid #e5e5ea; }
-  .acc-tab { flex: 1; padding: 8px 0; text-align: center; font-size: 13px; background: none; border: none;
-    color: #86868b; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .acc-tabs { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 1px solid rgba(60,60,67,0.06); }
+  .acc-tab { flex: 1; padding: 10px 0; text-align: center; font-size: 14px; background: none; border: none;
+    color: #8e8e93; cursor: pointer; border-bottom: 2.5px solid transparent; transition: all 0.2s; font-weight: 500; }
   .acc-tab.active { color: #007aff; border-bottom-color: #007aff; font-weight: 600; }
-  .acc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .acc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
   .acc-item {
-    border: 2px solid #e5e5ea; border-radius: 12px; padding: 10px 4px; text-align: center;
+    border: 2px solid #e5e5ea; border-radius: 14px; padding: 14px 6px; text-align: center;
     cursor: pointer; transition: all 0.2s; background: #fafafa; position: relative;
   }
-  .acc-item:hover { border-color: #007aff; background: #f0f7ff; }
+  .acc-item:hover { border-color: #007aff; background: #f0f7ff; transform: scale(1.03); }
   .acc-item.equipped { border-color: #34C759; background: #f0fff4; }
-  .acc-item .acc-icon { font-size: 24px; }
-  .acc-item .acc-name { font-size: 10px; color: #666; margin-top: 4px; }
-  .acc-item .acc-check { position: absolute; top: 3px; right: 3px; font-size: 10px; }
+  .acc-item .acc-icon { font-size: 28px; }
+  .acc-item .acc-name { font-size: 11px; color: #636366; margin-top: 6px; font-weight: 500; }
+  .acc-item .acc-check { position: absolute; top: 4px; right: 4px; font-size: 11px; }
   .acc-item.clear-btn { border-style: dashed; background: #fff; }
-  .acc-item.clear-btn .acc-icon { font-size: 18px; color: #ccc; }
+  .acc-item.clear-btn .acc-icon { font-size: 20px; color: #c7c7cc; }
 
   /* Preview banner */
   .preview-banner {
     background: linear-gradient(135deg, #E8F4FD, #F0E8FF);
-    border-radius: 12px; padding: 20px; text-align: center;
-    margin-bottom: 16px; position: relative; overflow: hidden;
+    border-radius: 16px; padding: 28px 20px; text-align: center;
+    margin-bottom: 20px; position: relative; overflow: hidden;
   }
   .preview-banner canvas {
     display: block; margin: 0 auto;
   }
   .preview-banner .preview-name {
-    font-size: 16px; font-weight: 600; margin-top: 8px; color: #333;
+    font-size: 18px; font-weight: 600; margin-top: 12px; color: #1c1c1e;
   }
   .preview-banner .preview-desc {
-    font-size: 12px; color: #888; margin-top: 2px;
+    font-size: 13px; color: #8e8e93; margin-top: 4px;
   }
 
   /* === Creator panel === */
@@ -142,33 +143,34 @@
   }
   .preview-label { font-size: 12px; color: #86868b; margin-bottom: 8px; }
 
-  .style-grid { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .style-grid { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
   .style-btn {
-    padding: 8px 16px; border: 2px solid #e5e5ea; border-radius: 20px;
-    background: #fff; font-size: 13px; cursor: pointer; transition: all 0.2s;
+    padding: 10px 18px; border: 2px solid #e5e5ea; border-radius: 22px;
+    background: #fff; font-size: 14px; cursor: pointer; transition: all 0.2s; font-weight: 500;
   }
   .style-btn:hover { border-color: #007aff; }
   .style-btn.active { border-color: #007aff; background: #e8f2ff; color: #007aff; font-weight: 600; }
 
   .name-input {
-    width: 100%; padding: 10px 14px; border: 1px solid #e5e5ea; border-radius: 8px;
-    font-size: 14px; outline: none; margin-bottom: 16px;
+    width: 100%; padding: 12px 16px; border: 1px solid #e5e5ea; border-radius: 12px;
+    font-size: 15px; outline: none; margin-bottom: 18px; background: #f2f2f7;
+    transition: border-color 0.2s, background 0.2s;
   }
-  .name-input:focus { border-color: #007aff; }
+  .name-input:focus { border-color: #007aff; background: #fff; }
 
-  .btn-row { display: flex; gap: 8px; justify-content: flex-end; }
+  .btn-row { display: flex; gap: 10px; justify-content: flex-end; }
   .btn {
-    padding: 10px 24px; border-radius: 8px; border: none; font-size: 14px;
-    font-weight: 500; cursor: pointer; transition: all 0.15s;
+    padding: 12px 28px; border-radius: 12px; border: none; font-size: 15px;
+    font-weight: 600; cursor: pointer; transition: all 0.2s;
   }
   .btn-primary { background: #007aff; color: #fff; }
   .btn-primary:hover { background: #0066d6; }
   .btn-primary:disabled { background: #c7c7cc; cursor: not-allowed; }
-  .btn-secondary { background: #e5e5ea; color: #1d1d1f; }
+  .btn-secondary { background: #e5e5ea; color: #1c1c1e; }
   .btn-secondary:hover { background: #d1d1d6; }
 
   .processing { opacity: 0.6; pointer-events: none; }
-  .status-text { font-size: 13px; color: #007aff; margin-right: auto; line-height: 40px; }
+  .status-text { font-size: 14px; color: #007aff; margin-right: auto; line-height: 44px; }
 </style>
 </head>
 <body>
@@ -189,7 +191,8 @@
   <div class="section">
     <div class="section-title">选择宠物</div>
     <div class="tab-bar">
-      <button class="tab-btn active" data-tab="dogs" onclick="switchTab('dogs')">🐶 狗狗派</button>
+      <button class="tab-btn active" data-tab="svgdogs" onclick="switchTab('svgdogs')">⭐ 经典小狗</button>
+      <button class="tab-btn" data-tab="dogs" onclick="switchTab('dogs')">🐶 狗狗派</button>
       <button class="tab-btn" data-tab="cats" onclick="switchTab('cats')">🐱 猫猫教</button>
       <button class="tab-btn" data-tab="birds" onclick="switchTab('birds')">🦆 禽鸟团</button>
       <button class="tab-btn" data-tab="others" onclick="switchTab('others')">🐷 萌宠馆</button>
@@ -223,6 +226,80 @@
     </div>
   </div>
 
+  <!-- Personality Selection -->
+  <div class="section">
+    <div class="section-title">宠物性格</div>
+    <div class="pet-grid" id="personalityGrid" style="grid-template-columns: repeat(3, 1fr);"></div>
+  </div>
+
+  <!-- Pomodoro Settings -->
+  <div class="section">
+    <div class="section-title">🍅 专注模式</div>
+    <div class="setting-row">
+      <span class="setting-label">工作时长</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="range" id="workDurationSlider" min="15" max="60" value="25" oninput="updateWorkDuration(this.value)">
+        <span class="setting-value" id="workDurationValue">25分钟</span>
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">休息时长</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="range" id="breakDurationSlider" min="3" max="15" value="5" oninput="updateBreakDuration(this.value)">
+        <span class="setting-value" id="breakDurationValue">5分钟</span>
+      </div>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">久坐提醒</span>
+      <label style="position:relative;width:44px;height:24px;">
+        <input type="checkbox" id="sedentaryToggle" onchange="toggleSedentary(this.checked)" style="opacity:0;width:0;height:0;" checked>
+        <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#34C759;border-radius:12px;transition:.3s;"></span>
+        <span id="sedentaryToggleKnob" style="position:absolute;content:'';height:20px;width:20px;left:22px;bottom:2px;background:white;border-radius:50%;transition:.3s;box-shadow:0 1px 3px rgba(0,0,0,.2);"></span>
+      </label>
+    </div>
+    <div class="tips">
+      通过系统托盘菜单或右键菜单开始番茄钟。<br>
+      连续工作超过50分钟会提醒你站起来活动。
+    </div>
+  </div>
+
+  <!-- Widget Settings -->
+  <div class="section">
+    <div class="section-title">桌面小组件</div>
+    <div class="setting-row">
+      <span class="setting-label">启用小组件</span>
+      <label style="position:relative;width:44px;height:24px;">
+        <input type="checkbox" id="widgetToggle" onchange="toggleWidget(this.checked)" style="opacity:0;width:0;height:0;">
+        <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#ccc;border-radius:12px;transition:.3s;"></span>
+        <span id="widgetToggleKnob" style="position:absolute;content:'';height:20px;width:20px;left:2px;bottom:2px;background:white;border-radius:50%;transition:.3s;box-shadow:0 1px 3px rgba(0,0,0,.2);"></span>
+      </label>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">天气城市</span>
+      <input type="text" id="weatherCityInput" placeholder="如：Beijing"
+        style="width:140px;padding:4px 8px;border:1px solid #ddd;border-radius:8px;font-size:12px;outline:none;"
+        oninput="saveWeatherCity(this.value)">
+    </div>
+    <div class="tips">留空则自动检测位置。支持中英文城市名。</div>
+  </div>
+
+  <!-- Clipboard Assistant -->
+  <div class="section">
+    <div class="section-title">📋 剪贴板助手</div>
+    <div class="setting-row">
+      <span class="setting-label">启用剪贴板助手</span>
+      <label style="position:relative;width:44px;height:24px;">
+        <input type="checkbox" id="clipboardToggle" onchange="toggleClipboard(this.checked)" style="opacity:0;width:0;height:0;">
+        <span style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#ccc;border-radius:12px;transition:.3s;"></span>
+        <span id="clipboardToggleKnob" style="position:absolute;content:'';height:20px;width:20px;left:2px;bottom:2px;background:white;border-radius:50%;transition:.3s;box-shadow:0 1px 3px rgba(0,0,0,.2);"></span>
+      </label>
+    </div>
+    <div class="tips">
+      复制英文自动翻译，复制代码自动解释，复制URL自动识别。<br>
+      需要设置 Claude API Key 才能使用翻译和解释功能。
+    </div>
+  </div>
+
   <!-- Claude AI Setting -->
   <div class="section">
     <div class="section-title">AI 对话 (Claude)</div>
@@ -240,6 +317,81 @@
       支持指令：打开应用、查看系统状态、执行命令等。<br>
       没有 API Key 时使用本地预设回复。<br>
       <a href="https://console.anthropic.com/settings/keys" style="color:#007aff;" onclick="require('electron').shell.openExternal(this.href);return false;">获取 API Key →</a>
+    </div>
+  </div>
+
+  <!-- OpenAI Whisper Setting -->
+  <div class="section">
+    <div class="section-title">🎤 语音转写 (OpenAI Whisper)</div>
+    <div class="setting-row">
+      <span class="setting-label">API Key</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <input type="password" id="openaiKeyInput" placeholder="sk-..."
+          style="width:200px;padding:4px 8px;border:1px solid #ddd;border-radius:8px;font-size:12px;outline:none;"
+          oninput="saveOpenaiKey(this.value)">
+        <span id="openaiStatus" style="font-size:11px;color:#86868b;">未设置</span>
+      </div>
+    </div>
+    <div class="tips">
+      点击对话框中的 🎤 按钮录音，自动转写为文字并发送给宠物。<br>
+      <a href="https://platform.openai.com/api-keys" style="color:#007aff;" onclick="require('electron').shell.openExternal(this.href);return false;">获取 OpenAI API Key →</a>
+    </div>
+  </div>
+
+  <!-- Companion Pets -->
+  <div class="section">
+    <div class="section-title">🐾 桌面伙伴</div>
+    <div class="tips" style="margin-top:0;margin-bottom:8px;">添加最多2只副宠物陪伴你！</div>
+    <div id="companionList" style="margin-bottom:8px;"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;" id="companionAddGrid"></div>
+  </div>
+
+  <!-- Sticker Export -->
+  <div class="section">
+    <div class="section-title">😊 表情包导出</div>
+    <div class="tips" style="margin-top:0;margin-bottom:10px;">将宠物动画导出为 GIF 表情包！</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+      <button class="tab-btn active" onclick="selectStickerGroup('daily',this)">日常</button>
+      <button class="tab-btn" onclick="selectStickerGroup('expression',this)">表情</button>
+      <button class="tab-btn" onclick="selectStickerGroup('funny',this)">搞笑</button>
+      <button class="tab-btn" onclick="selectStickerGroup('all',this)">全部</button>
+    </div>
+    <div id="stickerPreview" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;"></div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn btn-primary" id="exportBtn" onclick="exportStickers()">导出 GIF</button>
+      <span id="exportStatus" style="font-size:12px;color:#86868b;"></span>
+    </div>
+  </div>
+
+  <!-- Growth System -->
+  <div class="section">
+    <div class="section-title">🌱 成长记录</div>
+    <div id="growthInfo" style="font-size:13px;color:#666;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-size:18px;font-weight:700;color:#333;">Lv.<span id="growthLevel">1</span></span>
+        <span style="font-size:11px;color:#999;" id="growthDays">相遇 0 天</span>
+      </div>
+      <div style="background:#f0f0f2;border-radius:6px;height:8px;overflow:hidden;margin-bottom:12px;">
+        <div id="growthBar" style="height:100%;background:linear-gradient(90deg,#007aff,#34C759);border-radius:6px;width:0%;transition:width .5s;"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div style="background:#f5f5f7;border-radius:8px;padding:8px;text-align:center;">
+          <div style="font-size:18px;font-weight:700;color:#007aff;" id="growthXP">0</div>
+          <div style="font-size:10px;color:#999;">经验值</div>
+        </div>
+        <div style="background:#f5f5f7;border-radius:8px;padding:8px;text-align:center;">
+          <div style="font-size:18px;font-weight:700;color:#FF6B6B;" id="growthPomodoros">0</div>
+          <div style="font-size:10px;color:#999;">番茄钟</div>
+        </div>
+        <div style="background:#f5f5f7;border-radius:8px;padding:8px;text-align:center;">
+          <div style="font-size:18px;font-weight:700;color:#34C759;" id="growthMinutes">0</div>
+          <div style="font-size:10px;color:#999;">总分钟</div>
+        </div>
+        <div style="background:#f5f5f7;border-radius:8px;padding:8px;text-align:center;">
+          <div style="font-size:18px;font-weight:700;color:#FF9500;" id="growthActiveDays">0</div>
+          <div style="font-size:10px;color:#999;">活跃天</div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -301,7 +453,19 @@ let config = {};
 let currentStyle = 'outline';
 let originalImage = null;
 let cartoonDataUrl = null;
-let currentTab = 'dogs';
+let currentTab = 'svgdogs';
+
+// SVG Dog variants (must match pet.html)
+const SVG_DOG_VARIANTS = [
+  { id: 'classic', name: '经典小狗', colors: { body: '#F5F0E8', stroke: '#333', tongue: '#FF8B8B', eye: '#333', nose: '#333' } },
+  { id: 'brown',   name: '棕色小狗', colors: { body: '#C49A6C', stroke: '#5C3A1E', tongue: '#FF8B8B', eye: '#2C1810', nose: '#2C1810' } },
+  { id: 'golden',  name: '金毛小狗', colors: { body: '#E8C97A', stroke: '#8B6914', tongue: '#FF7070', eye: '#3D2B1F', nose: '#3D2B1F' } },
+  { id: 'black',   name: '黑色小狗', colors: { body: '#3A3A3A', stroke: '#111', tongue: '#FF6B7A', eye: '#F0E68C', nose: '#222' } },
+  { id: 'white',   name: '白色小狗', colors: { body: '#FAFAFA', stroke: '#999', tongue: '#FFB0B0', eye: '#333', nose: '#555' } },
+  { id: 'gray',    name: '灰色小狗', colors: { body: '#B0B0B0', stroke: '#4A4A4A', tongue: '#FF8B8B', eye: '#222', nose: '#333' } },
+  { id: 'orange',  name: '橘色小狗', colors: { body: '#F0A050', stroke: '#8B4513', tongue: '#FF7070', eye: '#3D2B1F', nose: '#3D2B1F' } },
+  { id: 'pink',    name: '粉色小狗', colors: { body: '#FFD0D0', stroke: '#CC6677', tongue: '#FF5C8A', eye: '#8B4560', nose: '#CC6677' } },
+];
 let previewAnimFrame = null;
 
 // Breed categories
@@ -317,7 +481,30 @@ async function init() {
   document.getElementById('sizeValue').textContent = (config.petSize || 200) + 'px';
   renderGrid();
   renderAccGrid();
+  renderPersonalityGrid();
   startPreviewAnimation();
+  // Widget settings
+  document.getElementById('widgetToggle').checked = config.widgetEnabled !== false;
+  updateToggleStyle('widgetToggle', 'widgetToggleKnob', config.widgetEnabled !== false);
+  document.getElementById('weatherCityInput').value = config.weatherCity || '';
+  // Pomodoro settings
+  if (document.getElementById('workDurationSlider')) {
+    document.getElementById('workDurationSlider').value = config.workDuration || 25;
+    document.getElementById('workDurationValue').textContent = (config.workDuration || 25) + '分钟';
+    document.getElementById('breakDurationSlider').value = config.breakDuration || 5;
+    document.getElementById('breakDurationValue').textContent = (config.breakDuration || 5) + '分钟';
+    document.getElementById('sedentaryToggle').checked = config.sedentaryReminder !== false;
+    updateToggleStyle('sedentaryToggle', 'sedentaryToggleKnob', config.sedentaryReminder !== false);
+  }
+  // Clipboard
+  if (document.getElementById('clipboardToggle')) {
+    document.getElementById('clipboardToggle').checked = config.clipboardAssistant === true;
+    updateToggleStyle('clipboardToggle', 'clipboardToggleKnob', config.clipboardAssistant === true);
+  }
+  // Growth
+  loadGrowthData();
+  // Companions
+  renderCompanions();
   // API Key
   const keyInput = document.getElementById('apiKeyInput');
   const aiStatus = document.getElementById('aiStatus');
@@ -325,6 +512,14 @@ async function init() {
     keyInput.value = config.claudeApiKey;
     aiStatus.textContent = '✅ 已连接';
     aiStatus.style.color = '#34C759';
+  }
+  // OpenAI Key
+  const openaiKeyInput = document.getElementById('openaiKeyInput');
+  const openaiStatus = document.getElementById('openaiStatus');
+  if (config.openaiApiKey) {
+    openaiKeyInput.value = config.openaiApiKey;
+    openaiStatus.textContent = '✅ 已设置';
+    openaiStatus.style.color = '#34C759';
   }
 }
 
@@ -338,11 +533,13 @@ function startPreviewAnimation() {
     const t = Date.now() / 1000;
     const activePet = config.activePet || 'default-dog';
 
-    if (activePet === 'default-dog') {
-      // Draw default dog SVG as static preview
+    if (activePet === 'default-dog' || activePet.startsWith('default-dog:')) {
+      // Draw SVG dog variant preview
       ctx.clearRect(0, 0, 120, 120);
-      drawDefaultDogPreview(ctx, 120);
-      nameEl.textContent = '默认小狗';
+      const variantId = activePet === 'default-dog' ? 'classic' : activePet.replace('default-dog:', '');
+      const variant = SVG_DOG_VARIANTS.find(v => v.id === variantId);
+      drawDefaultDogPreview(ctx, 120, variant ? variant.colors : null);
+      nameEl.textContent = variant ? variant.name : '经典小狗';
     } else if (activePet.startsWith('breed:')) {
       const breedId = activePet.replace('breed:', '');
       const breed = getBreedById(breedId);
@@ -376,12 +573,12 @@ function startPreviewAnimation() {
   animate();
 }
 
-function drawDefaultDogPreview(ctx, size) {
+function drawDefaultDogPreview(ctx, size, colors) {
+  const c = colors || { body: '#F5F0E8', stroke: '#333', tongue: '#FF8B8B', eye: '#333', nose: '#333' };
   const s = size / 200;
   ctx.save();
   ctx.scale(s, s);
-  // Simple default dog
-  ctx.fillStyle = '#F5F0E8'; ctx.strokeStyle = '#333'; ctx.lineWidth = 2.5;
+  ctx.fillStyle = c.body; ctx.strokeStyle = c.stroke; ctx.lineWidth = 2.5;
   // Body
   ctx.beginPath(); ctx.ellipse(90, 120, 45, 28, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   // Head
@@ -390,17 +587,19 @@ function drawDefaultDogPreview(ctx, size) {
   ctx.beginPath(); ctx.moveTo(115, 67); ctx.lineTo(112, 48); ctx.lineTo(125, 62); ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(138, 65); ctx.lineTo(142, 46); ctx.lineTo(148, 60); ctx.closePath(); ctx.fill(); ctx.stroke();
   // Eyes
-  ctx.fillStyle = '#333';
+  ctx.fillStyle = c.eye;
   ctx.beginPath(); ctx.arc(137, 82, 3, 0, Math.PI * 2); ctx.fill();
   // Nose
+  ctx.fillStyle = c.nose;
   ctx.beginPath(); ctx.ellipse(150, 90, 4, 3, 0, 0, Math.PI * 2); ctx.fill();
   // Mouth
+  ctx.strokeStyle = c.stroke;
   ctx.beginPath(); ctx.moveTo(150, 93); ctx.quadraticCurveTo(146, 99, 143, 96); ctx.stroke();
   // Tongue
-  ctx.fillStyle = '#FF8B8B'; ctx.strokeStyle = '#333'; ctx.lineWidth = 1;
+  ctx.fillStyle = c.tongue; ctx.strokeStyle = c.stroke; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.ellipse(146, 97, 4, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   // Legs
-  ctx.strokeStyle = '#333'; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
+  ctx.strokeStyle = c.stroke; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
   for (const x of [65, 80, 105, 118]) {
     ctx.beginPath(); ctx.moveTo(x, 142); ctx.lineTo(x, 170); ctx.stroke();
   }
@@ -423,12 +622,15 @@ function renderGrid() {
   grid.innerHTML = '';
   const activePet = config.activePet || 'default-dog';
 
-  if (currentTab === 'dogs') {
-    // Default dog
-    const defaultCard = createDefaultDogCard(activePet === 'default-dog');
-    grid.appendChild(defaultCard);
-
-    // Built-in dog breeds
+  if (currentTab === 'svgdogs') {
+    // SVG dog variants (classic + color variants)
+    for (const variant of SVG_DOG_VARIANTS) {
+      const petId = variant.id === 'classic' ? 'default-dog' : 'default-dog:' + variant.id;
+      const card = createSvgDogVariantCard(variant, activePet === petId);
+      grid.appendChild(card);
+    }
+  } else if (currentTab === 'dogs') {
+    // Built-in dog breeds (canvas-based)
     for (const breed of DOG_BREEDS) {
       const card = createBreedCard(breed, activePet === 'breed:' + breed.id);
       grid.appendChild(card);
@@ -495,6 +697,49 @@ function createDefaultDogCard(isActive) {
   const name = document.createElement('div');
   name.className = 'pet-name';
   name.textContent = '默认小狗';
+  card.appendChild(name);
+
+  if (isActive) {
+    const badge = document.createElement('span');
+    badge.className = 'active-badge';
+    badge.textContent = '使用中';
+    card.appendChild(badge);
+  }
+  return card;
+}
+
+function createSvgDogVariantCard(variant, isActive) {
+  const petId = variant.id === 'classic' ? 'default-dog' : 'default-dog:' + variant.id;
+  const card = document.createElement('div');
+  card.className = 'pet-card' + (isActive ? ' active' : '');
+  card.onclick = () => selectPet(petId);
+
+  const c = variant.colors;
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 128 128');
+  svg.setAttribute('width', '80');
+  svg.setAttribute('height', '80');
+  svg.style.display = 'block';
+  svg.style.margin = '0 auto 6px';
+  svg.innerHTML = `
+    <ellipse cx="58" cy="72" rx="32" ry="20" fill="${c.body}" stroke="${c.stroke}" stroke-width="2"/>
+    <circle cx="86" cy="48" r="18" fill="${c.body}" stroke="${c.stroke}" stroke-width="2"/>
+    <path d="M74 34 L71 16 L82 30" fill="${c.body}" stroke="${c.stroke}" stroke-width="2"/>
+    <path d="M92 32 L96 14 L101 28" fill="${c.body}" stroke="${c.stroke}" stroke-width="2"/>
+    <circle cx="92" cy="45" r="2.5" fill="${c.eye}"/>
+    <ellipse cx="102" cy="50" rx="3.5" ry="2.5" fill="${c.nose}"/>
+    <path d="M102 53 Q98 59 95 56" fill="none" stroke="${c.stroke}" stroke-width="1.5"/>
+    <path d="M98 56 Q96 63 100 63 Q104 63 102 56" fill="${c.tongue}" stroke="${c.stroke}" stroke-width="1"/>
+    <line x1="42" y1="87" x2="42" y2="112" stroke="${c.stroke}" stroke-width="3" stroke-linecap="round"/>
+    <line x1="53" y1="87" x2="53" y2="112" stroke="${c.stroke}" stroke-width="3" stroke-linecap="round"/>
+    <line x1="67" y1="87" x2="67" y2="112" stroke="${c.stroke}" stroke-width="3" stroke-linecap="round"/>
+    <line x1="76" y1="87" x2="76" y2="112" stroke="${c.stroke}" stroke-width="3" stroke-linecap="round"/>
+    <path d="M28 65 Q18 44 24 38" fill="none" stroke="${c.stroke}" stroke-width="2.5" stroke-linecap="round"/>`;
+  card.appendChild(svg);
+
+  const name = document.createElement('div');
+  name.className = 'pet-name';
+  name.textContent = variant.name;
   card.appendChild(name);
 
   if (isActive) {
@@ -594,6 +839,23 @@ function updateSize(val) {
   document.getElementById('sizeValue').textContent = val + 'px';
   config.petSize = parseInt(val);
   window.settingsAPI.saveConfig({ petSize: parseInt(val) });
+}
+
+let openaiKeySaveTimer = null;
+function saveOpenaiKey(val) {
+  clearTimeout(openaiKeySaveTimer);
+  openaiKeySaveTimer = setTimeout(() => {
+    config.openaiApiKey = val.trim();
+    window.settingsAPI.saveConfig({ openaiApiKey: val.trim() });
+    const status = document.getElementById('openaiStatus');
+    if (val.trim()) {
+      status.textContent = '✅ 已设置';
+      status.style.color = '#34C759';
+    } else {
+      status.textContent = '未设置';
+      status.style.color = '#86868b';
+    }
+  }, 800);
 }
 
 let apiKeySaveTimer = null;
@@ -836,6 +1098,156 @@ async function createCartoonPet() {
   }
 }
 
+// === Companion Pets ===
+async function renderCompanions() {
+  const companions = await window.settingsAPI.getCompanions();
+  const listEl = document.getElementById('companionList');
+  const addGrid = document.getElementById('companionAddGrid');
+  listEl.innerHTML = '';
+  addGrid.innerHTML = '';
+
+  // Show current companions
+  for (const breedId of companions) {
+    const breed = getBreedById(breedId);
+    const item = document.createElement('div');
+    item.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:#f5f5f7;border-radius:8px;margin-bottom:4px;';
+    item.innerHTML = `<span style="font-size:13px;">${breed ? breed.name : breedId}</span>
+      <button onclick="removeCompanion('${breedId}')" style="border:none;background:#ff3b30;color:#fff;border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;">移除</button>`;
+    listEl.appendChild(item);
+  }
+
+  // Show add options if < 2
+  if (companions.length < 2) {
+    const allBreeds = [...BREEDS.slice(0, 12)]; // Show first 12 breeds
+    for (const breed of allBreeds) {
+      if (companions.includes(breed.id)) continue;
+      const btn = document.createElement('button');
+      btn.className = 'tab-btn';
+      btn.style.fontSize = '11px';
+      btn.textContent = breed.name;
+      btn.onclick = () => addCompanion(breed.id);
+      addGrid.appendChild(btn);
+    }
+  }
+}
+
+async function addCompanion(breedId) {
+  await window.settingsAPI.addCompanion(breedId);
+  renderCompanions();
+}
+
+async function removeCompanion(breedId) {
+  window.settingsAPI.removeCompanion(breedId);
+  setTimeout(renderCompanions, 300);
+}
+
+// === Growth Data ===
+const XP_LEVELS = [0, 100, 300, 600, 1000, 1500, 2200, 3200, 5000, 7500, 10000];
+async function loadGrowthData() {
+  try {
+    const g = await window.settingsAPI.getGrowth();
+    if (!g) return;
+    document.getElementById('growthLevel').textContent = g.level || 1;
+    document.getElementById('growthXP').textContent = g.xp || 0;
+    document.getElementById('growthPomodoros').textContent = g.pomodorosCompleted || 0;
+    document.getElementById('growthMinutes').textContent = g.totalMinutes || 0;
+    document.getElementById('growthActiveDays').textContent = g.daysActive || 0;
+    // Progress bar
+    const level = g.level || 1;
+    const currentXP = g.xp || 0;
+    const thisLevel = XP_LEVELS[level - 1] || 0;
+    const nextLevel = XP_LEVELS[level] || XP_LEVELS[XP_LEVELS.length - 1];
+    const progress = Math.min(100, ((currentXP - thisLevel) / (nextLevel - thisLevel)) * 100);
+    document.getElementById('growthBar').style.width = progress + '%';
+    // Days since first met
+    if (g.firstMet) {
+      const days = Math.floor((Date.now() - new Date(g.firstMet).getTime()) / 86400000);
+      document.getElementById('growthDays').textContent = `相遇 ${days} 天`;
+    }
+  } catch(e) {}
+}
+
+// === Pomodoro Settings ===
+function updateWorkDuration(val) {
+  document.getElementById('workDurationValue').textContent = val + '分钟';
+  config.workDuration = parseInt(val);
+  window.settingsAPI.saveConfig({ workDuration: parseInt(val) });
+}
+function updateBreakDuration(val) {
+  document.getElementById('breakDurationValue').textContent = val + '分钟';
+  config.breakDuration = parseInt(val);
+  window.settingsAPI.saveConfig({ breakDuration: parseInt(val) });
+}
+
+// === Toggle Helpers ===
+function updateToggleStyle(checkboxId, knobId, checked) {
+  const knob = document.getElementById(knobId);
+  const checkbox = document.getElementById(checkboxId);
+  const track = knob ? knob.previousElementSibling : null;
+  if (knob) knob.style.left = checked ? '22px' : '2px';
+  if (track) track.style.background = checked ? '#34C759' : '#ccc';
+}
+
+function toggleWidget(val) {
+  config.widgetEnabled = val;
+  window.settingsAPI.saveConfig({ widgetEnabled: val });
+  updateToggleStyle('widgetToggle', 'widgetToggleKnob', val);
+}
+
+let weatherCityTimer = null;
+function saveWeatherCity(val) {
+  clearTimeout(weatherCityTimer);
+  weatherCityTimer = setTimeout(() => {
+    config.weatherCity = val.trim();
+    window.settingsAPI.saveConfig({ weatherCity: val.trim() });
+  }, 800);
+}
+
+function toggleSedentary(val) {
+  config.sedentaryReminder = val;
+  window.settingsAPI.saveConfig({ sedentaryReminder: val });
+  updateToggleStyle('sedentaryToggle', 'sedentaryToggleKnob', val);
+}
+
+function toggleClipboard(val) {
+  config.clipboardAssistant = val;
+  window.settingsAPI.saveConfig({ clipboardAssistant: val });
+  updateToggleStyle('clipboardToggle', 'clipboardToggleKnob', val);
+}
+
+// === Personality System ===
+const PERSONALITY_LIST = [
+  { id: 'cheerful', name: '开朗活泼', emoji: '😄', desc: '总是充满能量' },
+  { id: 'tsundere', name: '傲娇', emoji: '😤', desc: '嘴硬心软' },
+  { id: 'clingy', name: '粘人', emoji: '🥺', desc: '超级依赖你' },
+  { id: 'chill', name: '佛系', emoji: '😌', desc: '随遇而安' },
+  { id: 'nerd', name: '学霸', emoji: '🤓', desc: '爱分享知识' },
+  { id: 'foodie', name: '吃货', emoji: '🤤', desc: '满脑子美食' },
+];
+
+function renderPersonalityGrid() {
+  const grid = document.getElementById('personalityGrid');
+  grid.innerHTML = '';
+  const current = config.personality || 'cheerful';
+  for (const p of PERSONALITY_LIST) {
+    const card = document.createElement('div');
+    card.className = 'pet-card' + (current === p.id ? ' active' : '');
+    card.style.cursor = 'pointer';
+    card.onclick = () => {
+      config.personality = p.id;
+      window.settingsAPI.saveConfig({ personality: p.id });
+      renderPersonalityGrid();
+    };
+    card.innerHTML = `<div style="font-size:32px;margin-bottom:4px;">${p.emoji}</div>
+      <div class="pet-name" style="font-weight:600;">${p.name}</div>
+      <div style="font-size:10px;color:#999;margin-top:2px;">${p.desc}</div>`;
+    if (current === p.id) {
+      card.innerHTML += '<span class="active-badge">当前</span>';
+    }
+    grid.appendChild(card);
+  }
+}
+
 init();
 // === Accessory System ===
 let currentAccTab = 'headwear';
@@ -890,6 +1302,436 @@ function equipAccessory(category, itemId) {
   window.settingsAPI.saveConfig({ accessories: config.accessories });
   renderAccGrid();
 }
+
+// === Sticker Export System ===
+const STICKER_GROUPS = {
+  daily: ['stand', 'walk', 'sit', 'sleep'],
+  expression: ['tilt', 'beg', 'lonely'],
+  funny: ['chase', 'jump', 'stretch'],
+  all: ['stand', 'walk', 'sit', 'sleep', 'tilt', 'beg', 'lonely', 'chase', 'jump', 'stretch'],
+};
+
+const STICKER_NAMES = {
+  stand: '站立', walk: '散步', sit: '坐下', sleep: '睡觉',
+  tilt: '歪头', beg: '卖萌', lonely: '孤独',
+  chase: '追尾巴', jump: '蹦跳', stretch: '伸懒腰',
+};
+
+let currentStickerGroup = 'daily';
+
+function selectStickerGroup(group, btn) {
+  currentStickerGroup = group;
+  btn.parentElement.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderStickerPreview();
+}
+
+function renderStickerPreview() {
+  const preview = document.getElementById('stickerPreview');
+  preview.innerHTML = '';
+  const actions = STICKER_GROUPS[currentStickerGroup] || [];
+  for (const action of actions) {
+    const tag = document.createElement('span');
+    tag.style.cssText = 'background:#f0f0f2;border-radius:12px;padding:4px 10px;font-size:11px;color:#666;';
+    tag.textContent = STICKER_NAMES[action] || action;
+    preview.appendChild(tag);
+  }
+}
+
+// Minimal GIF encoder (LZW-based, pure JS)
+class SimpleGIFEncoder {
+  constructor(width, height) {
+    this.width = width;
+    this.height = height;
+    this.frames = [];
+    this.delay = 200; // ms per frame
+  }
+
+  addFrame(ctx, delay) {
+    const imageData = ctx.getImageData(0, 0, this.width, this.height);
+    this.frames.push({ data: imageData.data, delay: delay || this.delay });
+  }
+
+  encode() {
+    const w = this.width, h = this.height;
+    const buf = [];
+
+    // Header
+    buf.push(0x47, 0x49, 0x46, 0x38, 0x39, 0x61); // GIF89a
+
+    // Logical Screen Descriptor
+    buf.push(w & 0xFF, (w >> 8) & 0xFF);
+    buf.push(h & 0xFF, (h >> 8) & 0xFF);
+    buf.push(0xF6, 0, 0); // 7-bit color table (128 colors)
+
+    // Global Color Table (128 entries = 384 bytes)
+    const palette = this._buildPalette();
+    for (let i = 0; i < 128; i++) {
+      buf.push(palette[i * 3], palette[i * 3 + 1], palette[i * 3 + 2]);
+    }
+
+    // Netscape extension for looping
+    buf.push(0x21, 0xFF, 0x0B);
+    const ne = 'NETSCAPE2.0';
+    for (let i = 0; i < 11; i++) buf.push(ne.charCodeAt(i));
+    buf.push(0x03, 0x01, 0x00, 0x00, 0x00);
+
+    for (const frame of this.frames) {
+      // Graphic Control Extension
+      const delay100 = Math.round(frame.delay / 10);
+      buf.push(0x21, 0xF9, 0x04, 0x09);
+      buf.push(delay100 & 0xFF, (delay100 >> 8) & 0xFF);
+      buf.push(0x7F, 0x00); // transparent index = 127
+
+      // Image Descriptor
+      buf.push(0x2C, 0, 0, 0, 0);
+      buf.push(w & 0xFF, (w >> 8) & 0xFF);
+      buf.push(h & 0xFF, (h >> 8) & 0xFF);
+      buf.push(0x00); // no local color table
+
+      // LZW minimum code size
+      const minCodeSize = 7;
+      buf.push(minCodeSize);
+
+      // Indexed pixel data
+      const indexed = this._quantize(frame.data, palette);
+      const compressed = this._lzwEncode(indexed, minCodeSize);
+
+      // Write sub-blocks
+      let pos = 0;
+      while (pos < compressed.length) {
+        const chunk = Math.min(255, compressed.length - pos);
+        buf.push(chunk);
+        for (let i = 0; i < chunk; i++) buf.push(compressed[pos++]);
+      }
+      buf.push(0x00); // block terminator
+    }
+
+    buf.push(0x3B); // Trailer
+    return new Uint8Array(buf);
+  }
+
+  _buildPalette() {
+    // Build a fixed 128-color palette (6x6x3 RGB + some extras + transparent)
+    const palette = new Uint8Array(128 * 3);
+    let idx = 0;
+    for (let r = 0; r < 6; r++) {
+      for (let g = 0; g < 6; g++) {
+        for (let b = 0; b < 3; b++) {
+          if (idx >= 127) break;
+          palette[idx * 3] = Math.round(r * 51);
+          palette[idx * 3 + 1] = Math.round(g * 51);
+          palette[idx * 3 + 2] = Math.round(b * 85);
+          idx++;
+        }
+      }
+    }
+    // Fill remaining with grays
+    while (idx < 127) {
+      const v = Math.round((idx - 108) * 23);
+      palette[idx * 3] = palette[idx * 3 + 1] = palette[idx * 3 + 2] = Math.min(255, Math.max(0, v));
+      idx++;
+    }
+    // Index 127 = transparent (magenta)
+    palette[127 * 3] = 255; palette[127 * 3 + 1] = 0; palette[127 * 3 + 2] = 255;
+    return palette;
+  }
+
+  _quantize(rgba, palette) {
+    const n = this.width * this.height;
+    const indexed = new Uint8Array(n);
+    for (let i = 0; i < n; i++) {
+      const r = rgba[i * 4], g = rgba[i * 4 + 1], b = rgba[i * 4 + 2], a = rgba[i * 4 + 3];
+      if (a < 128) { indexed[i] = 127; continue; } // transparent
+      let bestD = Infinity, bestIdx = 0;
+      for (let j = 0; j < 127; j++) {
+        const dr = r - palette[j * 3], dg = g - palette[j * 3 + 1], db = b - palette[j * 3 + 2];
+        const d = dr * dr + dg * dg + db * db;
+        if (d < bestD) { bestD = d; bestIdx = j; }
+      }
+      indexed[i] = bestIdx;
+    }
+    return indexed;
+  }
+
+  _lzwEncode(indexed, minCodeSize) {
+    const clearCode = 1 << minCodeSize;
+    const eoiCode = clearCode + 1;
+    let codeSize = minCodeSize + 1;
+    let nextCode = eoiCode + 1;
+    const maxCode = 4095;
+
+    const output = [];
+    let bitBuf = 0, bitCount = 0;
+
+    function writeBits(code, size) {
+      bitBuf |= code << bitCount;
+      bitCount += size;
+      while (bitCount >= 8) {
+        output.push(bitBuf & 0xFF);
+        bitBuf >>= 8;
+        bitCount -= 8;
+      }
+    }
+
+    // Initialize table
+    let table = {};
+    function resetTable() {
+      table = {};
+      for (let i = 0; i < clearCode; i++) table[String(i)] = i;
+      nextCode = eoiCode + 1;
+      codeSize = minCodeSize + 1;
+    }
+
+    resetTable();
+    writeBits(clearCode, codeSize);
+
+    let current = String(indexed[0]);
+    for (let i = 1; i < indexed.length; i++) {
+      const next = current + ',' + indexed[i];
+      if (table[next] !== undefined) {
+        current = next;
+      } else {
+        writeBits(table[current], codeSize);
+        if (nextCode <= maxCode) {
+          table[next] = nextCode++;
+          if (nextCode > (1 << codeSize) && codeSize < 12) codeSize++;
+        } else {
+          writeBits(clearCode, codeSize);
+          resetTable();
+        }
+        current = String(indexed[i]);
+      }
+    }
+    writeBits(table[current], codeSize);
+    writeBits(eoiCode, codeSize);
+    if (bitCount > 0) output.push(bitBuf & 0xFF);
+
+    return output;
+  }
+}
+
+async function exportStickers() {
+  const statusEl = document.getElementById('exportStatus');
+  const exportBtn = document.getElementById('exportBtn');
+  exportBtn.disabled = true;
+  statusEl.textContent = '正在生成...';
+
+  const actions = STICKER_GROUPS[currentStickerGroup] || [];
+  const size = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  // Get the SVG frames from the main pet.html
+  // We'll render each action by drawing the SVG onto canvas
+  const svgFrames = {
+    stand: ['frame-stand'],
+    walk: ['frame-walk1', 'frame-walk2'],
+    sit: ['frame-sit'],
+    sleep: ['frame-sleep'],
+    tilt: ['frame-tilt'],
+    beg: ['frame-beg'],
+    lonely: ['frame-lonely'],
+    chase: ['frame-chase'],
+    jump: ['frame-jump'],
+    stretch: ['frame-stretch'],
+  };
+
+  let exported = 0;
+  for (const action of actions) {
+    const frameIds = svgFrames[action] || ['frame-stand'];
+    const encoder = new SimpleGIFEncoder(size, size);
+
+    // Render 8 frames with slight variation
+    const numFrames = frameIds.length > 1 ? 8 : 4;
+    for (let f = 0; f < numFrames; f++) {
+      ctx.clearRect(0, 0, size, size);
+      const frameId = frameIds[f % frameIds.length];
+
+      // Create SVG blob and draw to canvas
+      const svgStr = buildSVGString(frameId, size);
+      await renderSVGToCanvas(ctx, svgStr, size, size);
+      encoder.addFrame(ctx, frameIds.length > 1 ? 150 : 400);
+    }
+
+    const gifData = encoder.encode();
+    const blob = new Blob([gifData], { type: 'image/gif' });
+    const url = URL.createObjectURL(blob);
+
+    // Download
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pet-${action}.gif`;
+    a.click();
+    URL.revokeObjectURL(url);
+    exported++;
+    statusEl.textContent = `已导出 ${exported}/${actions.length}...`;
+    await new Promise(r => setTimeout(r, 300));
+  }
+
+  statusEl.textContent = `✅ 已导出 ${exported} 个表情包到下载目录！`;
+  exportBtn.disabled = false;
+}
+
+function buildSVGString(frameId, size) {
+  // Build a standalone SVG string for the given frame
+  const svgTemplates = {
+    'frame-stand': `<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
+      <ellipse cx="58" cy="72" rx="32" ry="20" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <circle cx="86" cy="48" r="18" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M74 34 L71 16 L82 30" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M92 32 L96 14 L101 28" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <circle cx="92" cy="45" r="2.5" fill="#333"/>
+      <ellipse cx="102" cy="50" rx="3.5" ry="2.5" fill="#333"/>
+      <path d="M102 53 Q98 59 95 56" fill="none" stroke="#333" stroke-width="1.5"/>
+      <path d="M98 56 Q96 63 100 63 Q104 63 102 56" fill="#FF8B8B" stroke="#333" stroke-width="1"/>
+      <line x1="42" y1="87" x2="42" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <line x1="53" y1="87" x2="53" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <line x1="67" y1="87" x2="67" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <line x1="76" y1="87" x2="76" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <path d="M28 65 Q18 44 24 38" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+    'frame-walk1': `<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
+      <ellipse cx="58" cy="72" rx="32" ry="20" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <circle cx="86" cy="46" r="18" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M74 32 L71 14 L82 28" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M92 30 L96 12 L101 26" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <circle cx="92" cy="43" r="2.5" fill="#333"/>
+      <ellipse cx="102" cy="48" rx="3.5" ry="2.5" fill="#333"/>
+      <line x1="40" y1="87" x2="32" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <line x1="52" y1="87" x2="60" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <line x1="65" y1="87" x2="72" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <line x1="76" y1="87" x2="68" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <path d="M28 65 Q16 48 22 40" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+    'frame-walk2': `<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
+      <ellipse cx="58" cy="72" rx="32" ry="20" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <circle cx="86" cy="46" r="18" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M74 32 L71 14 L82 28" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M92 30 L96 12 L101 26" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <circle cx="92" cy="43" r="2.5" fill="#333"/>
+      <ellipse cx="102" cy="48" rx="3.5" ry="2.5" fill="#333"/>
+      <line x1="40" y1="87" x2="48" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <line x1="52" y1="87" x2="44" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <line x1="65" y1="87" x2="58" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <line x1="76" y1="87" x2="84" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <path d="M28 65 Q20 42 28 36" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+    'frame-sit': `<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
+      <ellipse cx="58" cy="78" rx="30" ry="24" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <circle cx="82" cy="48" r="18" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M70 34 L67 16 L78 30" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M88 32 L92 14 L97 28" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <circle cx="88" cy="45" r="2.5" fill="#333"/>
+      <ellipse cx="98" cy="50" rx="3.5" ry="2.5" fill="#333"/>
+      <line x1="50" y1="96" x2="50" y2="116" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <line x1="62" y1="96" x2="62" y2="116" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <path d="M38 90 Q30 104 40 110" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <path d="M34 88 Q24 100 34 108" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <path d="M30 72 Q18 55 24 46" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+    'frame-sleep': `<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
+      <ellipse cx="58" cy="90" rx="38" ry="16" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <circle cx="88" cy="82" r="16" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M78 70 L76 56 L84 66" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M92 68 L95 54 L99 64" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M85 80 Q89 77 93 80" fill="none" stroke="#333" stroke-width="2"/>
+      <ellipse cx="102" cy="84" rx="3" ry="2.5" fill="#333"/>
+      <text x="100" y="66" font-size="11" fill="#6B9BD2" font-weight="bold">z</text>
+      <text x="108" y="56" font-size="13" fill="#6B9BD2" font-weight="bold">z</text>
+      <text x="116" y="46" font-size="15" fill="#6B9BD2" font-weight="bold">Z</text>
+      <path d="M24 85 Q16 78 20 72" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+    'frame-tilt': `<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
+      <ellipse cx="58" cy="72" rx="32" ry="20" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <g transform="rotate(15, 86, 48)"><circle cx="86" cy="48" r="18" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M74 34 L71 16 L82 30" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M92 32 L96 14 L101 28" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <circle cx="90" cy="45" r="3.5" fill="#333"/><circle cx="90" cy="43" r="1.2" fill="#fff"/>
+      <ellipse cx="102" cy="50" rx="3.5" ry="2.5" fill="#333"/></g>
+      <line x1="42" y1="87" x2="42" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <line x1="53" y1="87" x2="53" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <line x1="67" y1="87" x2="67" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <line x1="76" y1="87" x2="76" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <path d="M28 65 Q18 44 24 38" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+    'frame-beg': `<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
+      <ellipse cx="60" cy="78" rx="28" ry="22" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <circle cx="78" cy="46" r="18" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M66 32 L63 14 L74 28" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M84 30 L88 12 L93 26" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <circle cx="84" cy="43" r="4" fill="#333"/><circle cx="84" cy="41" r="1.5" fill="#fff"/>
+      <ellipse cx="94" cy="48" rx="3.5" ry="2.5" fill="#333"/>
+      <path d="M42 92 Q34 106 44 112" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <path d="M38 90 Q28 102 38 110" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <path d="M34 72 Q22 55 28 46" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+    'frame-lonely': `<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
+      <ellipse cx="58" cy="92" rx="36" ry="14" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <circle cx="88" cy="84" r="16" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M78 72 L76 58 L84 68" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M92 70 L95 56 L99 66" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M84 82 Q87 80 90 83" fill="none" stroke="#333" stroke-width="2"/>
+      <ellipse cx="100" cy="86" rx="3" ry="2" fill="#333"/>
+      <text x="96" y="68" font-size="16" fill="#aaa">...</text>
+      <path d="M24 87 Q18 82 20 76" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+    'frame-chase': `<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
+      <ellipse cx="64" cy="75" rx="28" ry="20" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <circle cx="82" cy="55" r="16" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M72 42 L70 26 L78 38" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M88 40 L91 24 L95 36" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <circle cx="87" cy="52" r="3" fill="#333"/>
+      <ellipse cx="96" cy="56" rx="3" ry="2.5" fill="#333"/>
+      <path d="M92 62 Q90 67 94 67 Q96 67 95 62" fill="#FF8B8B" stroke="#333" stroke-width="1"/>
+      <line x1="48" y1="88" x2="44" y2="110" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <line x1="58" y1="88" x2="54" y2="110" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <line x1="70" y1="88" x2="74" y2="110" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <line x1="78" y1="86" x2="82" y2="108" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <path d="M38 68 Q26 52 32 42 Q40 34 52 40" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+    'frame-jump': `<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
+      <ellipse cx="58" cy="62" rx="32" ry="20" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <circle cx="86" cy="38" r="18" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M74 24 L71 6 L82 20" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M92 22 L96 4 L101 18" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <ellipse cx="102" cy="40" rx="3.5" ry="2.5" fill="#333"/>
+      <path d="M98 46 Q96 53 100 53 Q104 53 102 46" fill="#FF8B8B" stroke="#333" stroke-width="1"/>
+      <line x1="38" y1="76" x2="30" y2="96" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <line x1="50" y1="78" x2="58" y2="98" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <line x1="66" y1="78" x2="74" y2="98" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <line x1="76" y1="76" x2="84" y2="96" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <path d="M28 55 Q14 34 22 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"/>
+      <text x="108" y="26" font-size="10" fill="#FFD700">✦</text></svg>`,
+    'frame-stretch': `<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
+      <ellipse cx="55" cy="68" rx="34" ry="18" fill="#F5F0E8" stroke="#333" stroke-width="2" transform="rotate(-12, 55, 68)"/>
+      <circle cx="92" cy="56" r="17" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M80 42 L77 24 L88 38" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M98 40 L102 22 L107 36" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <circle cx="98" cy="53" r="2.5" fill="#333"/>
+      <ellipse cx="108" cy="58" rx="3.5" ry="2.5" fill="#333"/>
+      <line x1="60" y1="80" x2="72" y2="110" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <line x1="68" y1="78" x2="80" y2="108" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <line x1="35" y1="76" x2="35" y2="110" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <line x1="44" y1="78" x2="44" y2="110" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+      <path d="M24 62 Q14 42 20 36" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+  };
+  return svgTemplates[frameId] || svgTemplates['frame-stand'];
+}
+
+function renderSVGToCanvas(ctx, svgStr, w, h) {
+  return new Promise((resolve) => {
+    const blob = new Blob([svgStr], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      resolve();
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve();
+    };
+    img.src = url;
+  });
+}
+
+// Initialize sticker preview
+renderStickerPreview();
 </script>
 </body>
 </html>

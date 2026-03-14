@@ -589,6 +589,331 @@ function getPose(state, t) {
         tongue: flopT >= 1,
       };
     })(),
+
+    // ---- New actions / skills ----
+
+    dig: (() => {
+      // Digging motion - front paws alternate scratching ground
+      const digPhase = t * 8;
+      const lDig = Math.max(0, s(digPhase)) * 12;
+      const rDig = Math.max(0, s(digPhase + Math.PI)) * 12;
+      const dirtKick = Math.max(0, s(digPhase * 0.5));
+      return {
+        bodyY: 6 + s(digPhase * 0.5) * 2,
+        bodyTilt: -8 + s(digPhase * 0.3) * 2,
+        headY: 8 + s(digPhase * 0.5) * 2,
+        headTilt: -6 + s(t * 3) * 3,
+        legFL: 8 - lDig, legFR: 8 - rDig,
+        legLiftFL: lDig * 0.8, legLiftFR: rDig * 0.8,
+        legBL: -2, legBR: -1,
+        tailWag: s(t * 6) * 10 + s(t * 4) * 4,
+        eyeOpen: 0.9,
+        mouthOpen: 0.1 + dirtKick * 0.15,
+        breathe: s(t * 3) * 0.5,
+        digging: true,
+        dirtPhase: dirtKick,
+      };
+    })(),
+
+    bow: (() => {
+      // 作揖 - Traditional greeting bow with paws together
+      const bowCycle = (t * 1.8) % 4;
+      const bowing = bowCycle < 2.5;
+      const rising = bowCycle >= 2.5;
+      const bowDepth = bowing ? Math.min(1, bowCycle / 1.2) : Math.max(0, 1 - (bowCycle - 2.5) / 1.5);
+      return {
+        bodyY: 4 + bowDepth * 6,
+        bodyTilt: -bowDepth * 12,
+        headY: -2 + bowDepth * 14,
+        headTilt: -bowDepth * 20 + s(t * 2) * 2,
+        legFL: -60 - bowDepth * 10, legFR: -60 - bowDepth * 10,
+        legLiftFL: 6 + bowDepth * 4, legLiftFR: 6 + bowDepth * 4,
+        legBL: 0, legBR: 0,
+        tailWag: s(t * 3) * 6,
+        eyeOpen: rising ? 1.1 : 0.7,
+        mouthOpen: rising ? 0.2 : 0,
+        breathe: s(t * 1.5) * 0.8,
+        pawsUp: true,
+        pawWiggle: bowing ? s(t * 6) * 2 : 0,
+      };
+    })(),
+
+    playDead: (() => {
+      // Playing dead - falls over dramatically, legs stiff in air
+      const fallT = Math.min(1, t * 1.2);
+      const stiff = fallT >= 1;
+      const twitch = stiff ? (s(t * 8) > 0.95 ? s(t * 20) * 2 : 0) : 0;
+      return {
+        bodyY: 18 * fallT,
+        bodyTilt: 30 * fallT + twitch,
+        headY: 16 * fallT,
+        headTilt: 35 * fallT,
+        legFL: -80 * fallT + twitch, legFR: -75 * fallT,
+        legBL: -85 * fallT, legBR: -80 * fallT + twitch,
+        legLiftFL: stiff ? 10 : 0, legLiftFR: stiff ? 12 : 0,
+        tailWag: stiff ? 0 : s(t * 2) * 3,
+        eyeOpen: stiff ? 0 : Math.max(0, 1 - fallT * 1.5),
+        mouthOpen: stiff ? (twitch !== 0 ? 0.1 : 0) : 0.4 * fallT,
+        breathe: stiff ? s(t * 0.4) * 0.5 : 0,
+        tongue: stiff,
+        xEyes: stiff,
+      };
+    })(),
+
+    spinTrick: (() => {
+      // Spinning in circles - fast rotation with happy expression
+      const spinPhase = t * 5;
+      const rotAngle = spinPhase;
+      const bounce = Math.abs(s(spinPhase * 2)) * 4;
+      return {
+        bodyY: -bounce,
+        bodyTilt: s(rotAngle) * 15,
+        headY: -bounce * 0.6 - 2,
+        headTilt: c(rotAngle) * 12,
+        legFL: s(rotAngle) * 8, legFR: s(rotAngle + Math.PI) * 8,
+        legBL: c(rotAngle) * 6, legBR: c(rotAngle + Math.PI) * 6,
+        legLiftFL: Math.max(0, s(rotAngle)) * 6,
+        legLiftFR: Math.max(0, s(rotAngle + Math.PI)) * 6,
+        tailWag: s(t * 12) * 20,
+        eyeOpen: 1.2,
+        mouthOpen: 0.3 + s(t * 4) * 0.15,
+        breathe: 0,
+        sparkle: true,
+        spinning: true,
+      };
+    })(),
+
+    tantrum: (() => {
+      // Throwing a tantrum - rolling on ground, kicking legs
+      const tanPhase = t * 5;
+      const kick = s(tanPhase);
+      const rollSide = s(tanPhase * 0.7) * 20;
+      return {
+        bodyY: 16 + s(tanPhase * 2) * 3,
+        bodyTilt: rollSide,
+        headY: 12 + s(tanPhase * 1.5) * 3,
+        headTilt: -rollSide * 0.8 + s(t * 8) * 5,
+        legFL: kick > 0 ? -70 + kick * 15 : -55,
+        legFR: kick < 0 ? -70 - kick * 15 : -55,
+        legBL: -80 + s(tanPhase + 1) * 15,
+        legBR: -80 + s(tanPhase + 2) * 15,
+        legLiftFL: Math.abs(kick) * 10,
+        legLiftFR: Math.abs(s(tanPhase + Math.PI)) * 10,
+        tailWag: s(t * 8) * 15,
+        eyeOpen: 0.4 + s(t * 6) * 0.2,
+        mouthOpen: 0.5 + Math.abs(s(t * 4)) * 0.3,
+        breathe: 0,
+        pawsUp: true,
+        pawWiggle: s(t * 10) * 8,
+      };
+    })(),
+
+    headBob: (() => {
+      // Head bobbing side to side like listening to music
+      const bobPhase = t * 4;
+      const nodX = s(bobPhase) * 18;
+      const nodY = s(bobPhase * 2) * 5;
+      return {
+        bodyY: 1 + s(bobPhase * 0.5) * 1.5,
+        bodyTilt: s(bobPhase * 0.5) * 3,
+        headY: -1 + nodY,
+        headTilt: nodX,
+        legFL: s(bobPhase * 0.5) * 2, legFR: -s(bobPhase * 0.5) * 2,
+        legBL: 0, legBR: 0,
+        tailWag: s(t * 5) * 10 + s(t * 3) * 4,
+        eyeOpen: 0.9 + s(t * 3) * 0.1,
+        mouthOpen: 0.1 + Math.max(0, s(bobPhase * 2)) * 0.15,
+        breathe: s(t * 2) * 0.8,
+      };
+    })(),
+
+    snack: (() => {
+      // Sneaking food - looking around then nomming
+      const cycle = (t * 1.5) % 5;
+      const lookAround = cycle < 2;
+      const nomming = cycle >= 2 && cycle < 4;
+      const guilty = cycle >= 4;
+      if (lookAround) {
+        const look = s(cycle * 4);
+        return {
+          bodyY: 2,
+          bodyTilt: -2,
+          headY: -3,
+          headTilt: look * 25,
+          legFL: 0, legFR: 0, legBL: 0, legBR: 0,
+          tailWag: s(t * 2) * 3,
+          eyeOpen: 1.3,
+          mouthOpen: 0,
+          breathe: s(t * 2) * 0.6,
+        };
+      } else if (nomming) {
+        const chew = s(t * 12);
+        return {
+          bodyY: 4,
+          bodyTilt: -4,
+          headY: 6,
+          headTilt: -8 + s(t * 2) * 3,
+          legFL: 3, legFR: -3, legBL: 0, legBR: 0,
+          tailWag: s(t * 8) * 14,
+          eyeOpen: 0.5 + chew * 0.1,
+          mouthOpen: 0.2 + Math.abs(chew) * 0.3,
+          breathe: 0,
+          nomming: true,
+        };
+      } else {
+        return {
+          bodyY: 1,
+          bodyTilt: 0,
+          headY: -2,
+          headTilt: s(t * 1.5) * 5,
+          legFL: 0, legFR: 0, legBL: 0, legBR: 0,
+          tailWag: s(t * 1) * 2,
+          eyeOpen: 0.7,
+          mouthOpen: 0,
+          breathe: s(t * 1.5) * 1,
+          blush: true,
+        };
+      }
+    })(),
+
+    shy: (() => {
+      // Shy hiding - body shrinks, paws cover face
+      const shyPhase = Math.min(1, t * 0.6);
+      const peek = shyPhase >= 1 ? (s(t * 1.5) > 0.7 ? (s(t * 1.5) - 0.7) / 0.3 : 0) : 0;
+      return {
+        bodyY: 8 * shyPhase,
+        bodyTilt: -2,
+        headY: 4 * shyPhase,
+        headTilt: -6 * shyPhase + peek * 4,
+        legFL: -70 * shyPhase, legFR: -70 * shyPhase,
+        legLiftFL: 10 * shyPhase, legLiftFR: 10 * shyPhase,
+        legBL: -90 * shyPhase, legBR: -90 * shyPhase,
+        tailWag: s(t * 1.5) * 3,
+        eyeOpen: peek > 0 ? 0.8 * peek : 0.1,
+        mouthOpen: 0,
+        breathe: s(t * 1.5) * 1,
+        pawsUp: true,
+        pawWiggle: s(t * 2) * 1.5,
+        blush: true,
+      };
+    })(),
+
+    sing: (() => {
+      // Singing/howling - head up, mouth open, musical notes
+      const singPhase = t * 3;
+      const howl = s(singPhase);
+      const intensity = 0.5 + Math.abs(howl) * 0.5;
+      return {
+        bodyY: -2 + s(singPhase * 0.5) * 2,
+        bodyTilt: s(singPhase * 0.3) * 3,
+        headY: -8 - intensity * 6,
+        headTilt: -15 - intensity * 10 + s(t * 5) * 3,
+        legFL: 0, legFR: 0, legBL: 0, legBR: 0,
+        tailWag: s(t * 4) * 8 + s(t * 6) * 4,
+        eyeOpen: 0.3,
+        mouthOpen: 0.4 + intensity * 0.4,
+        breathe: s(singPhase) * 2,
+        singing: true,
+        notePhase: (t * 2) % 1,
+      };
+    })(),
+
+    handshake: (() => {
+      // Handshake / give paw - one paw extended forward
+      const shakeCycle = t * 3;
+      const pumpPhase = s(shakeCycle);
+      const extended = Math.min(1, t * 1.5);
+      return {
+        bodyY: 4 * extended,
+        bodyTilt: -4 * extended,
+        headY: 0,
+        headTilt: 8 * extended + s(t * 2) * 3,
+        legFL: -80 * extended, legFR: 0,
+        legLiftFL: 12 * extended + pumpPhase * 4 * extended,
+        legBL: -90 * extended, legBR: -90 * extended,
+        tailWag: s(t * 6) * 12 + s(t * 4) * 5,
+        eyeOpen: 1.15,
+        mouthOpen: 0.15 + Math.max(0, pumpPhase) * 0.1,
+        breathe: s(t * 2) * 0.8,
+        pawsUp: true,
+      };
+    })(),
+
+    frisbee: (() => {
+      // Catching frisbee - jump up with mouth open, then land with it
+      const cycle = (t * 1.2) % 4;
+      const crouch = cycle < 1;
+      const leap = cycle >= 1 && cycle < 2.2;
+      const land = cycle >= 2.2;
+      if (crouch) {
+        const prep = cycle;
+        return {
+          bodyY: 6 + prep * 4,
+          bodyTilt: -6 * prep,
+          headY: 4 * prep,
+          headTilt: -15 * prep,
+          legFL: prep * 5, legFR: prep * 3,
+          legBL: -prep * 4, legBR: -prep * 3,
+          tailWag: s(t * 6) * 8,
+          eyeOpen: 1.3,
+          mouthOpen: 0.1,
+          breathe: 0,
+        };
+      } else if (leap) {
+        const leapT = (cycle - 1) / 1.2;
+        const height = s(leapT * Math.PI) * 25;
+        return {
+          bodyY: -height,
+          bodyTilt: -8 + leapT * 12,
+          headY: -height * 0.8 - 4,
+          headTilt: -20 + leapT * 25,
+          legFL: -50 - leapT * 20, legFR: -40 - leapT * 20,
+          legBL: 10 + leapT * 15, legBR: 8 + leapT * 12,
+          tailWag: s(t * 10) * 15,
+          eyeOpen: 1.2,
+          mouthOpen: 0.6 + leapT * 0.3,
+          breathe: 0,
+          sparkle: true,
+        };
+      } else {
+        const landT = Math.min(1, (cycle - 2.2) / 1.8);
+        return {
+          bodyY: 2 + s(landT * 3) * 2,
+          bodyTilt: -2,
+          headY: 0,
+          headTilt: s(t * 2) * 4,
+          legFL: 0, legFR: 0, legBL: 0, legBR: 0,
+          tailWag: s(t * 10) * 18 + s(t * 6) * 6,
+          eyeOpen: 1.2,
+          mouthOpen: 0.15,
+          breathe: s(t * 2) * 1,
+          sparkle: landT < 0.3,
+          proud: true,
+        };
+      }
+    })(),
+
+    butterfly: (() => {
+      // Looking up at butterfly - head tilted up, eyes tracking
+      const flyPath = t * 1.5;
+      const bfX = s(flyPath) * 15;
+      const bfY = c(flyPath * 1.3) * 8;
+      return {
+        bodyY: 0,
+        bodyTilt: s(flyPath * 0.3) * 2,
+        headY: -6 - Math.abs(bfY) * 0.3,
+        headTilt: -18 + bfX * 0.8 + s(t * 0.8) * 3,
+        legFL: 0, legFR: 0, legBL: 0, legBR: 0,
+        tailWag: s(t * 3) * 6 + s(t * 5) * 3,
+        eyeOpen: 1.25,
+        mouthOpen: 0.05,
+        breathe: s(t * 1.5) * 1.2,
+        butterfly: true,
+        butterflyX: 100 + bfX * 2.5,
+        butterflyY: 30 + bfY * 1.5 + s(flyPath * 2.7) * 6,
+        butterflyWing: s(t * 12),
+      };
+    })(),
   };
   return poses[state] || poses.stand;
 }
@@ -1050,6 +1375,129 @@ function renderPet(ctx, breed, state, t, size, accessories, dir) {
     ctx.globalAlpha = 0.6;
     ctx.font = '10px Arial';
     ctx.fillText('😵', headCX + 20, headCY - 18 + Math.sin(t * 0.5) * 2);
+    ctx.globalAlpha = 1;
+  }
+
+  // Digging dirt particles
+  if (pose.digging) {
+    const dirtPhase = pose.dirtPhase || 0;
+    for (let i = 0; i < 5; i++) {
+      const angle = -Math.PI * 0.3 + (i / 5) * Math.PI * 0.6;
+      const dist = 10 + dirtPhase * 20 + Math.sin(t * 6 + i * 2) * 5;
+      const dx = bodyCX + bodyW * 0.3 + Math.cos(angle) * dist;
+      const dy = bodyCY + bodyH + 5 - Math.sin(angle) * dist * 0.4;
+      ctx.globalAlpha = 0.6 - dirtPhase * 0.3;
+      ctx.fillStyle = '#C8A878';
+      ctx.beginPath();
+      ctx.arc(dx, dy, 2 + Math.random() * 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // X eyes for playing dead
+  if (pose.xEyes) {
+    ctx.globalAlpha = 0.5;
+    ctx.font = '12px Arial';
+    ctx.fillText('✕', headCX + 12, headCY - 8);
+    ctx.fillText('✕', headCX + 24, headCY - 8);
+    ctx.globalAlpha = 1;
+  }
+
+  // Spinning sparkle trail
+  if (pose.spinning) {
+    for (let i = 0; i < 4; i++) {
+      const trail = (t * 5 + i * 1.5) % (Math.PI * 2);
+      const tx2 = bodyCX + Math.cos(trail) * 35;
+      const ty2 = bodyCY - 5 + Math.sin(trail) * 15;
+      ctx.globalAlpha = 0.3 + Math.sin(t * 6 + i) * 0.3;
+      ctx.font = `${8 + i * 2}px Arial`;
+      ctx.fillText('✦', tx2, ty2);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // Snack nomming crumbs
+  if (pose.nomming) {
+    for (let i = 0; i < 4; i++) {
+      const crumbX = headCX + 10 + Math.sin(t * 4 + i * 3) * 8;
+      const crumbY = headCY + 10 + i * 4 + Math.sin(t * 3 + i) * 3;
+      ctx.globalAlpha = 0.5 + Math.sin(t * 5 + i) * 0.2;
+      ctx.fillStyle = '#D4A860';
+      ctx.beginPath();
+      ctx.arc(crumbX, crumbY, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // Blush cheeks effect
+  if (pose.blush) {
+    ctx.globalAlpha = 0.3 + Math.sin(t * 2) * 0.15;
+    ctx.fillStyle = '#FFB0B0';
+    drawCircle(ctx, headCX + 6, headCY + 2, 6, '#FFB0B0', null);
+    drawCircle(ctx, headCX + 30, headCY + 2, 6, '#FFB0B0', null);
+    ctx.globalAlpha = 1;
+  }
+
+  // Singing musical notes
+  if (pose.singing) {
+    const notes = ['♪', '♫', '♩', '🎵'];
+    for (let i = 0; i < 4; i++) {
+      const notePhase = (t * 2 + i * 0.8) % 3;
+      const noteX = headCX + 5 + Math.sin(notePhase * 2 + i) * 15 + i * 8;
+      const noteY = headCY - 30 - notePhase * 15;
+      const alpha = notePhase < 2 ? Math.min(1, notePhase) : Math.max(0, 3 - notePhase);
+      ctx.globalAlpha = alpha * 0.7;
+      ctx.font = `${10 + i * 2}px Arial`;
+      ctx.fillStyle = '#FF69B4';
+      ctx.fillText(notes[i], noteX, noteY);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // Proud sparkle burst
+  if (pose.proud) {
+    ctx.globalAlpha = 0.6;
+    ctx.font = '14px Arial';
+    ctx.fillText('⭐', headCX + 20, headCY - 25 + Math.sin(t * 3) * 3);
+    ctx.globalAlpha = 1;
+  }
+
+  // Butterfly
+  if (pose.butterfly) {
+    const bx = pose.butterflyX || 100;
+    const by = pose.butterflyY || 40;
+    const wing = pose.butterflyWing || 0;
+    ctx.save();
+    ctx.translate(bx, by);
+    // Body
+    ctx.fillStyle = '#333';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 1.5, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Wings
+    const wingOpen = 0.3 + Math.abs(wing) * 0.7;
+    ctx.fillStyle = '#FF88CC';
+    ctx.globalAlpha = 0.8;
+    // Left wing
+    ctx.beginPath();
+    ctx.ellipse(-5 * wingOpen, -1, 6 * wingOpen, 8, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+    // Right wing
+    ctx.beginPath();
+    ctx.ellipse(5 * wingOpen, -1, 6 * wingOpen, 8, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    // Wing pattern
+    ctx.fillStyle = '#FF55AA';
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath();
+    ctx.arc(-5 * wingOpen, -2, 3 * wingOpen, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(5 * wingOpen, -2, 3 * wingOpen, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
     ctx.globalAlpha = 1;
   }
 

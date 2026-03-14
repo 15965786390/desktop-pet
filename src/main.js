@@ -1,10 +1,11 @@
-const { app, BrowserWindow, Tray, Menu, screen, nativeImage, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, Tray, Menu, screen, nativeImage, ipcMain, dialog, powerMonitor, clipboard, Notification, session } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const { execSync, exec } = require('child_process');
 const Anthropic = require('@anthropic-ai/sdk');
 const { autoUpdater } = require('electron-updater');
+const OpenAI = require('openai');
 
 // === Single Instance Lock ===
 const gotLock = app.requestSingleInstanceLock();
@@ -24,10 +25,12 @@ if (!gotLock) {
 // === Data paths ===
 const userDataPath = app.getPath('userData');
 const petsDir = path.join(userDataPath, 'pets');
+const recordingsDir = path.join(userDataPath, 'recordings');
 const configPath = path.join(userDataPath, 'config.json');
 
 function ensureDirs() {
   if (!fs.existsSync(petsDir)) fs.mkdirSync(petsDir, { recursive: true });
+  if (!fs.existsSync(recordingsDir)) fs.mkdirSync(recordingsDir, { recursive: true });
 }
 
 function loadConfig() {
@@ -41,17 +44,158 @@ function saveConfig(cfg) {
   fs.writeFileSync(configPath, JSON.stringify(cfg, null, 2));
 }
 
+// === Activity Tracker ===
+const activityTracker = {
+  events: [],         // timestamps of recent input events
+  windowSize: 30000,  // 30 second window
+  level: 'idle',      // busy | active | idle | away
+  lastInput: Date.now(),
+  keyCount: 0,
+  mouseCount: 0,
+};
+
+function trackInputEvent(type) {
+  const now = Date.now();
+  activityTracker.events.push({ type, ts: now });
+  activityTracker.lastInput = now;
+  // Prune old events
+  activityTracker.events = activityTracker.events.filter(e => now - e.ts < activityTracker.windowSize);
+}
+
+function computeActivityLevel() {
+  const now = Date.now();
+  activityTracker.events = activityTracker.events.filter(e => now - e.ts < activityTracker.windowSize);
+  const total = activityTracker.events.length;
+  const keys = activityTracker.events.filter(e => e.type === 'K').length;
+  const mouse = activityTracker.events.filter(e => e.type === 'M').length;
+  activityTracker.keyCount = keys;
+  activityTracker.mouseCount = mouse;
+  const timeSinceInput = now - activityTracker.lastInput;
+
+  if (timeSinceInput > 5 * 60 * 1000) {
+    activityTracker.level = 'away';
+  } else if (total > 20) {
+    activityTracker.level = 'busy';
+  } else if (total >= 5) {
+    activityTracker.level = 'active';
+  } else {
+    activityTracker.level = 'idle';
+  }
+  return activityTracker.level;
+}
+
+// === Pomodoro Timer ===
+const pomodoroTimer = {
+  state: 'stopped', // stopped | working | break | paused
+  remaining: 0,     // seconds remaining
+  workDuration: 25,  // minutes
+  breakDuration: 5,  // minutes
+  sessionsToday: 0,
+  totalMinutesToday: 0,
+  pausedState: null,
+  interval: null,
+  workStartTime: null, // for sedentary tracking
+  continuousWorkMinutes: 0,
+};
+
+function pomodoroTick() {
+  if (pomodoroTimer.state === 'working' || pomodoroTimer.state === 'break') {
+    pomodoroTimer.remaining--;
+    if (pomodoroTimer.state === 'working') {
+      pomodoroTimer.totalMinutesToday = Math.floor((pomodoroTimer.workDuration * 60 - pomodoroTimer.remaining) / 60) +
+        (pomodoroTimer.sessionsToday * pomodoroTimer.workDuration);
+    }
+    // Notify pet window
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('pomodoro-tick', {
+        state: pomodoroTimer.state,
+        remaining: pomodoroTimer.remaining,
+        sessionsToday: pomodoroTimer.sessionsToday,
+        totalMinutesToday: pomodoroTimer.totalMinutesToday,
+      });
+    }
+    if (pomodoroTimer.remaining <= 0) {
+      if (pomodoroTimer.state === 'working') {
+        // Work session complete
+        pomodoroTimer.sessionsToday++;
+        pomodoroTimer.totalMinutesToday = pomodoroTimer.sessionsToday * pomodoroTimer.workDuration;
+        new Notification({ title: '🍅 番茄钟完成！', body: `休息 ${pomodoroTimer.breakDuration} 分钟吧~` }).show();
+        pomodoroTimer.state = 'break';
+        pomodoroTimer.remaining = pomodoroTimer.breakDuration * 60;
+      } else {
+        // Break complete
+        new Notification({ title: '⏰ 休息结束', body: '准备好继续了吗？' }).show();
+        pomodoroStop();
+      }
+    }
+    // Sedentary reminder: continuous work > 50 min
+    if (pomodoroTimer.state === 'working' && pomodoroTimer.workStartTime) {
+      const worked = (Date.now() - pomodoroTimer.workStartTime) / 60000;
+      const config = loadConfig();
+      if (config.sedentaryReminder !== false && worked > 50 && Math.floor(worked) % 50 === 0) {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('sedentary-reminder');
+        }
+      }
+    }
+  }
+}
+
+function pomodoroStart() {
+  const config = loadConfig();
+  pomodoroTimer.workDuration = config.workDuration || 25;
+  pomodoroTimer.breakDuration = config.breakDuration || 5;
+  if (pomodoroTimer.state === 'paused') {
+    pomodoroTimer.state = pomodoroTimer.pausedState || 'working';
+  } else {
+    pomodoroTimer.state = 'working';
+    pomodoroTimer.remaining = pomodoroTimer.workDuration * 60;
+    pomodoroTimer.workStartTime = Date.now();
+  }
+  if (pomodoroTimer.interval) clearInterval(pomodoroTimer.interval);
+  pomodoroTimer.interval = setInterval(pomodoroTick, 1000);
+}
+
+function pomodoroPause() {
+  if (pomodoroTimer.state === 'working' || pomodoroTimer.state === 'break') {
+    pomodoroTimer.pausedState = pomodoroTimer.state;
+    pomodoroTimer.state = 'paused';
+    if (pomodoroTimer.interval) { clearInterval(pomodoroTimer.interval); pomodoroTimer.interval = null; }
+  }
+}
+
+function pomodoroStop() {
+  pomodoroTimer.state = 'stopped';
+  pomodoroTimer.remaining = 0;
+  pomodoroTimer.workStartTime = null;
+  if (pomodoroTimer.interval) { clearInterval(pomodoroTimer.interval); pomodoroTimer.interval = null; }
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('pomodoro-tick', { state: 'stopped', remaining: 0, sessionsToday: pomodoroTimer.sessionsToday, totalMinutesToday: pomodoroTimer.totalMinutesToday });
+  }
+}
+
+function pomodoroSkip() {
+  if (pomodoroTimer.state === 'working') {
+    pomodoroTimer.sessionsToday++;
+    pomodoroTimer.state = 'break';
+    pomodoroTimer.remaining = pomodoroTimer.breakDuration * 60;
+  } else if (pomodoroTimer.state === 'break') {
+    pomodoroStop();
+  }
+}
+
 // === Windows ===
 let mainWindow;
 let settingsWindow;
 let tray;
+let companionWindows = []; // { window, breedId }
 
 function createPetWindow() {
   const { width: screenW, height: screenH } = screen.getPrimaryDisplay().workAreaSize;
   const config = loadConfig();
   const petSize = config.petSize || 200;
-  const winW = petSize + 10;
-  const winH = petSize + 30;
+  const winW = petSize + 220;
+  const winH = petSize + 80;
 
   mainWindow = new BrowserWindow({
     width: winW,
@@ -84,8 +228,8 @@ function createSettingsWindow() {
   }
 
   settingsWindow = new BrowserWindow({
-    width: 520,
-    height: 620,
+    width: 580,
+    height: 740,
     resizable: false,
     title: '桌面宠物 - 设置',
     webPreferences: {
@@ -107,7 +251,7 @@ function setupIPC() {
     const config = loadConfig();
     const size = config.petSize || 200;
     const bounds = mainWindow.getBounds();
-    mainWindow.setBounds({ x: bounds.x + dx, y: bounds.y + dy, width: size + 10, height: size + 30 });
+    mainWindow.setBounds({ x: bounds.x + dx, y: bounds.y + dy, width: size + 220, height: size + 80 });
   });
 
   ipcMain.handle('get-bounds', () => {
@@ -125,7 +269,7 @@ function setupIPC() {
     if (!mainWindow) return;
     const config = loadConfig();
     const size = config.petSize || 200;
-    mainWindow.setBounds({ x, y, width: size + 10, height: size + 30 });
+    mainWindow.setBounds({ x, y, width: size + 220, height: size + 80 });
   });
 
   // Settings: load config
@@ -160,7 +304,7 @@ function setupIPC() {
       mainWindow.webContents.send('config-changed', old);
       const size = old.petSize || 200;
       const bounds = mainWindow.getBounds();
-      mainWindow.setBounds({ x: bounds.x, y: bounds.y, width: size + 10, height: size + 30 });
+      mainWindow.setBounds({ x: bounds.x, y: bounds.y, width: size + 220, height: size + 80 });
     }
   });
 
@@ -341,14 +485,28 @@ function setupIPC() {
     // Keep last 20 messages to save tokens
     if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
 
+    // Personality prompts
+    const personalityPrompts = {
+      cheerful: '你是一只超级开朗活泼的小狗，总是充满能量和热情！说话带很多感叹号，爱用可爱的语气词。喜欢给人加油打气！',
+      tsundere: '你是一只傲娇的小狗，嘴上说不要身体很诚实。经常用"哼"、"才不是呢"、"别误会了"这类口吻。偶尔流露真心时会害羞。',
+      clingy: '你是一只超级粘人的小狗，特别依赖主人，总想让主人关注你。说话像撒娇，经常用"嘛"、"呜"、"人家"。被冷落会难过。',
+      chill: '你是一只很佛系的小狗，看淡一切，随遇而安。说话简短平和，偶尔冒出哲理。不会大惊小怪，一切都是"还行吧"。',
+      nerd: '你是一只爱学习的学霸小狗，对知识充满好奇。喜欢分享冷知识和有趣的事实。说话时偶尔引用名言或科学知识。',
+      foodie: '你是一只超爱吃的小狗，脑子里全是美食。说话总会扯到吃的，经常饿，对食物的描述特别生动。最爱骨头和肉肉。',
+    };
+    const config = loadConfig();
+    const personality = config.personality || 'cheerful';
+    const personalityPrompt = personalityPrompts[personality] || personalityPrompts.cheerful;
+
     try {
       let response = await client.messages.create({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 300,
-        system: `你是一只可爱的桌面宠物，性格活泼、温暖、略带俏皮。用简短可爱的语气回复（1-2句话）。
+        system: `${personalityPrompt}
+你是一只桌面宠物。用简短可爱的语气回复（1-2句话）。
 你可以帮用户执行电脑操作，如打开应用、查看系统状态、执行命令等。
 当用户要求做某事时，使用提供的工具来完成。
-保持回复简短，像一只会说话的小狗/猫。适当加emoji。`,
+保持回复简短，适当加emoji。`,
         messages: chatHistory,
         tools: petTools,
       });
@@ -398,10 +556,157 @@ function setupIPC() {
   // Clear chat history
   ipcMain.on('claude-clear-history', () => { chatHistory = []; });
 
+  // === Recording: save audio file ===
+  ipcMain.handle('save-recording', async (_, base64Data, filename) => {
+    try {
+      const filePath = path.join(recordingsDir, filename);
+      const buffer = Buffer.from(base64Data, 'base64');
+      fs.writeFileSync(filePath, buffer);
+      return { ok: true, filePath };
+    } catch (e) {
+      return { error: e.message };
+    }
+  });
+
+  // === Recording: transcribe audio via OpenAI Whisper ===
+  ipcMain.handle('transcribe-audio', async (_, filePath) => {
+    try {
+      const config = loadConfig();
+      const apiKey = config.openaiApiKey;
+      if (!apiKey) return { error: 'no_key', text: '请先在设置中配置 OpenAI API Key' };
+
+      const openai = new OpenAI({ apiKey });
+      const transcription = await openai.audio.transcriptions.create({
+        file: fs.createReadStream(filePath),
+        model: 'whisper-1',
+        language: 'zh',
+      });
+      return { ok: true, text: transcription.text };
+    } catch (e) {
+      return { error: 'transcribe_error', text: '转写失败: ' + (e.message || '').slice(0, 200) };
+    }
+  });
+
   // Screen size for multiplayer positioning
   ipcMain.handle('get-screen-size', () => {
     const { width, height } = screen.getPrimaryDisplay().workAreaSize;
     return { width, height };
+  });
+
+  // Activity state
+  ipcMain.handle('get-activity-state', () => {
+    computeActivityLevel();
+    let activeApp = '';
+    try {
+      activeApp = execSync(
+        `osascript -e 'tell application "System Events" to get name of first application process whose frontmost is true'`,
+        { encoding: 'utf8', timeout: 3000 }
+      ).trim();
+    } catch(e) {}
+    return {
+      level: activityTracker.level,
+      keyRate: activityTracker.keyCount,
+      mouseRate: activityTracker.mouseCount,
+      activeApp,
+      duration: Date.now() - activityTracker.lastInput,
+    };
+  });
+
+  // Pomodoro IPC
+  ipcMain.handle('get-pomodoro-state', () => ({
+    state: pomodoroTimer.state,
+    remaining: pomodoroTimer.remaining,
+    sessionsToday: pomodoroTimer.sessionsToday,
+    totalMinutesToday: pomodoroTimer.totalMinutesToday,
+  }));
+  ipcMain.on('pomodoro-start', () => pomodoroStart());
+  ipcMain.on('pomodoro-pause', () => pomodoroPause());
+  ipcMain.on('pomodoro-stop', () => pomodoroStop());
+  ipcMain.on('pomodoro-skip', () => pomodoroSkip());
+
+  // Weather API (wttr.in, free, no key)
+  let weatherCache = { data: null, ts: 0 };
+  ipcMain.handle('get-weather', async () => {
+    const now = Date.now();
+    if (weatherCache.data && now - weatherCache.ts < 30 * 60 * 1000) {
+      return weatherCache.data;
+    }
+    try {
+      const config = loadConfig();
+      const city = config.weatherCity || '';
+      const https = require('https');
+      const url = `https://wttr.in/${encodeURIComponent(city)}?format=j1`;
+      const data = await new Promise((resolve, reject) => {
+        https.get(url, { timeout: 8000 }, (res) => {
+          let body = '';
+          res.on('data', c => body += c);
+          res.on('end', () => {
+            try { resolve(JSON.parse(body)); } catch(e) { reject(e); }
+          });
+        }).on('error', reject);
+      });
+      const current = data.current_condition && data.current_condition[0];
+      if (current) {
+        const result = {
+          temp: current.temp_C,
+          feelsLike: current.FeelsLikeC,
+          desc: current.lang_zh && current.lang_zh[0] ? current.lang_zh[0].value : current.weatherDesc[0].value,
+          humidity: current.humidity,
+          icon: getWeatherEmoji(current.weatherCode),
+          city: city || (data.nearest_area && data.nearest_area[0] ? data.nearest_area[0].areaName[0].value : ''),
+        };
+        weatherCache = { data: result, ts: now };
+        return result;
+      }
+    } catch(e) {
+      console.log('[weather] fetch failed:', e.message);
+    }
+    return null;
+  });
+
+  function getWeatherEmoji(code) {
+    const c = parseInt(code);
+    if (c === 113) return '☀️';
+    if (c === 116) return '⛅';
+    if (c === 119 || c === 122) return '☁️';
+    if ([176,263,266,293,296,299,302,305,308,311,314,353,356,359].includes(c)) return '🌧️';
+    if ([200,386,389,392,395].includes(c)) return '⛈️';
+    if ([179,182,185,227,230,281,284,317,320,323,326,329,332,335,338,350,362,365,368,371,374,377].includes(c)) return '🌨️';
+    if (c === 143 || c === 248 || c === 260) return '🌫️';
+    return '🌤️';
+  }
+
+  // Hot news - 每日60秒新闻
+  let newsCache = { data: null, ts: 0 };
+  ipcMain.handle('get-news', async () => {
+    const now = Date.now();
+    if (newsCache.data && now - newsCache.ts < 30 * 60 * 1000) {
+      return newsCache.data;
+    }
+    try {
+      const https = require('https');
+      const data = await new Promise((resolve, reject) => {
+        https.get('https://api.pearktrue.cn/api/60s/?format=json', { timeout: 8000 }, (res) => {
+          let body = '';
+          res.on('data', c => body += c);
+          res.on('end', () => {
+            try { resolve(JSON.parse(body)); } catch(e) { reject(e); }
+          });
+        }).on('error', reject);
+      });
+      if (data.code === 200 && data.data && data.data.length > 0) {
+        const items = data.data.slice(0, 15).map(item => {
+          // 去掉开头的序号如 "1、" "2、"
+          const title = item.replace(/^\d+[、.]\s*/, '');
+          return { title };
+        });
+        newsCache = { data: items, ts: now };
+        return items;
+      }
+    } catch(e) {
+      console.log('[news] fetch failed:', e.message);
+    }
+    return null;
   });
 
   // Quit app
@@ -441,11 +746,17 @@ function setupIPC() {
   ipcMain.handle('get-active-pet', () => {
     const config = loadConfig();
     const accessories = config.accessories || {};
-    if (config.activePet === 'default-dog') return { type: 'default', accessories };
+    const personality = config.personality || 'cheerful';
+    if (config.activePet === 'default-dog') return { type: 'default', accessories, personality };
+    // SVG dog variant: activePet = 'default-dog:brown'
+    if (config.activePet && config.activePet.startsWith('default-dog:')) {
+      const variant = config.activePet.replace('default-dog:', '');
+      return { type: 'default', variant, accessories, personality };
+    }
     // Built-in breed: activePet = 'breed:corgi-pink'
     if (config.activePet && config.activePet.startsWith('breed:')) {
       const breedId = config.activePet.replace('breed:', '');
-      return { type: 'breed', breedId, accessories };
+      return { type: 'breed', breedId, accessories, personality };
     }
     // Custom pet
     const jsonPath = path.join(petsDir, config.activePet + '.json');
@@ -457,9 +768,9 @@ function setupIPC() {
         const buf = fs.readFileSync(petData.imagePath);
         petData.imageDataUrl = `data:${mime};base64,${buf.toString('base64')}`;
       }
-      return { type: 'custom', data: petData };
+      return { type: 'custom', data: petData, personality };
     }
-    return { type: 'default' };
+    return { type: 'default', personality };
   });
 }
 
@@ -483,7 +794,24 @@ function createTray() {
     { label: '🐾 伸懒腰', click: () => mainWindow && mainWindow.webContents.send('action', 'stretch') },
     { label: '💩 拉粑粑', click: () => mainWindow && mainWindow.webContents.send('action', 'poop') },
     { type: 'separator' },
+    { label: '🕳️ 挖洞', click: () => mainWindow && mainWindow.webContents.send('action', 'dig') },
+    { label: '🙏 作揖', click: () => mainWindow && mainWindow.webContents.send('action', 'bow') },
+    { label: '💀 装死', click: () => mainWindow && mainWindow.webContents.send('action', 'playDead') },
+    { label: '🌀 转圈圈', click: () => mainWindow && mainWindow.webContents.send('action', 'spinTrick') },
+    { label: '😤 撒泼打滚', click: () => mainWindow && mainWindow.webContents.send('action', 'tantrum') },
+    { label: '🎵 摇头晃脑', click: () => mainWindow && mainWindow.webContents.send('action', 'headBob') },
+    { label: '🍪 偷吃', click: () => mainWindow && mainWindow.webContents.send('action', 'snack') },
+    { label: '😳 害羞', click: () => mainWindow && mainWindow.webContents.send('action', 'shy') },
+    { label: '🎤 唱歌', click: () => mainWindow && mainWindow.webContents.send('action', 'sing') },
+    { label: '🤝 握手', click: () => mainWindow && mainWindow.webContents.send('action', 'handshake') },
+    { label: '🥏 叼飞盘', click: () => mainWindow && mainWindow.webContents.send('action', 'frisbee') },
+    { label: '🦋 看蝴蝶', click: () => mainWindow && mainWindow.webContents.send('action', 'butterfly') },
+    { type: 'separator' },
     { label: '🎲 自由模式', click: () => mainWindow && mainWindow.webContents.send('action', 'random') },
+    { type: 'separator' },
+    { label: '🍅 开始专注', click: () => { pomodoroStart(); if (mainWindow) mainWindow.webContents.send('action', 'pomodoro-start'); } },
+    { label: '⏸ 暂停番茄钟', click: () => pomodoroPause() },
+    { label: '⏹ 结束番茄钟', click: () => pomodoroStop() },
     { type: 'separator' },
     { label: '⚙️ 设置', click: () => createSettingsWindow() },
     { label: '退出', click: () => app.quit() },
@@ -496,6 +824,15 @@ function createTray() {
 app.whenReady().then(() => {
   ensureDirs();
   setupIPC();
+
+  // Allow microphone access for recording
+  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+    if (permission === 'media') {
+      callback(true);
+    } else {
+      callback(true);
+    }
+  });
 
   // Animated Dock icon
   const framesDir = path.join(__dirname, '..', 'build', 'icon-frames');
@@ -575,10 +912,12 @@ app.whenReady().then(() => {
         const lines = data.toString().trim().split('\n');
         for (const line of lines) {
           if (line === 'K') {
+            trackInputEvent('K');
             if (mainWindow && !mainWindow.isDestroyed()) {
               mainWindow.webContents.send('input-event', 'keydown');
             }
           } else if (line === 'M') {
+            trackInputEvent('M');
             if (mainWindow && !mainWindow.isDestroyed()) {
               mainWindow.webContents.send('input-event', 'mousedown');
             }
@@ -602,6 +941,241 @@ app.whenReady().then(() => {
   }
 
   startInputWatcher();
+
+  // === Clipboard Assistant ===
+  let lastClipboardText = '';
+  let clipboardInterval = null;
+
+  function startClipboardWatcher() {
+    if (clipboardInterval) clearInterval(clipboardInterval);
+    clipboardInterval = setInterval(async () => {
+      const config = loadConfig();
+      if (!config.clipboardAssistant) return;
+      try {
+        const text = clipboard.readText().trim();
+        if (!text || text === lastClipboardText || text.length > 500) return;
+        lastClipboardText = text;
+        // Detect content type
+        const type = detectClipboardType(text);
+        if (!type) return;
+        // Try AI processing
+        const client = getClaudeClient();
+        if (client && type.aiPrompt) {
+          try {
+            const resp = await client.messages.create({
+              model: 'claude-sonnet-4-20250514',
+              max_tokens: 100,
+              system: '你是一个简洁的桌面助手。用一句话回答，不要多余内容。',
+              messages: [{ role: 'user', content: type.aiPrompt + text.slice(0, 300) }],
+            });
+            const aiText = resp.content[0]?.text || '';
+            if (aiText && mainWindow && !mainWindow.isDestroyed()) {
+              mainWindow.webContents.send('clipboard-changed', { type: type.name, text: text.slice(0, 100), result: aiText });
+            }
+          } catch(e) {}
+        } else if (type.result && mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('clipboard-changed', { type: type.name, text: text.slice(0, 100), result: type.result });
+        }
+      } catch(e) {}
+    }, 2000);
+  }
+
+  function detectClipboardType(text) {
+    // Color code
+    if (/^#[0-9a-fA-F]{3,8}$/.test(text) || /^rgb/i.test(text)) {
+      return { name: 'color', result: `🎨 颜色: ${text}` };
+    }
+    // URL
+    if (/^https?:\/\/.+/i.test(text)) {
+      return { name: 'url', aiPrompt: '用一句话描述这个URL是什么网站/页面: ' };
+    }
+    // Code snippet
+    if (/[{}\[\]();]/.test(text) && (text.includes('function') || text.includes('const ') || text.includes('import ') || text.includes('class ') || text.includes('def ') || text.includes('return '))) {
+      return { name: 'code', aiPrompt: '用一句话简单解释这段代码在做什么: ' };
+    }
+    // English text (for translation)
+    if (/^[a-zA-Z\s.,!?'"()-]+$/.test(text) && text.length > 10) {
+      return { name: 'english', aiPrompt: '翻译成中文（只给翻译结果）: ' };
+    }
+    return null;
+  }
+
+  startClipboardWatcher();
+
+  // === Growth System ===
+  const XP_LEVELS = [0, 100, 300, 600, 1000, 1500, 2200, 3200, 5000, 7500, 10000];
+  const LEVEL_REWARDS = {
+    2: { acc: 'ribbon', name: '蝴蝶结' },
+    3: { acc: 'crown-gold', name: '金色皇冠' },
+    4: { acc: 'round-black', name: '墨镜' },
+    5: { acc: 'cape', name: '小披风' },
+    7: { acc: 'rainbow', name: '彩虹围巾' },
+    10: { acc: 'halo', name: '天使光环' },
+  };
+
+  function getGrowth() {
+    const config = loadConfig();
+    return config.growth || {
+      xp: 0, level: 1, totalMinutes: 0,
+      pomodorosCompleted: 0, daysActive: 0,
+      unlockedAccessories: [], firstMet: new Date().toISOString().slice(0, 10),
+      dailyLog: {},
+    };
+  }
+
+  function saveGrowth(growth) {
+    const config = loadConfig();
+    config.growth = growth;
+    saveConfig(config);
+  }
+
+  function addXP(amount, source) {
+    const growth = getGrowth();
+    growth.xp += amount;
+    // Check level up
+    const oldLevel = growth.level;
+    for (let i = XP_LEVELS.length - 1; i >= 0; i--) {
+      if (growth.xp >= XP_LEVELS[i]) {
+        growth.level = i + 1;
+        break;
+      }
+    }
+    if (growth.level > oldLevel) {
+      // Level up!
+      const reward = LEVEL_REWARDS[growth.level];
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('level-up', {
+          level: growth.level,
+          reward: reward ? reward.name : null,
+        });
+      }
+      if (reward && !growth.unlockedAccessories.includes(reward.acc)) {
+        growth.unlockedAccessories.push(reward.acc);
+      }
+    }
+    saveGrowth(growth);
+  }
+
+  // XP: +1 per minute online
+  setInterval(() => {
+    addXP(1, 'online');
+    const growth = getGrowth();
+    growth.totalMinutes++;
+    // Daily log
+    const today = new Date().toISOString().slice(0, 10);
+    if (!growth.dailyLog) growth.dailyLog = {};
+    if (!growth.dailyLog[today]) growth.dailyLog[today] = { minutes: 0, pomodoros: 0 };
+    growth.dailyLog[today].minutes++;
+    // Track active days
+    growth.daysActive = Object.keys(growth.dailyLog).length;
+    saveGrowth(growth);
+  }, 60000);
+
+  // Growth IPC
+  ipcMain.handle('get-growth', () => getGrowth());
+
+  // === Companion Pets ===
+  function createCompanionWindow(breedId) {
+    const { width: screenW, height: screenH } = screen.getPrimaryDisplay().workAreaSize;
+    const config = loadConfig();
+    const petSize = config.petSize || 200;
+    const offsetX = Math.floor(Math.random() * 300) + 50;
+
+    const win = new BrowserWindow({
+      width: petSize + 220,
+      height: petSize + 80,
+      x: screenW - petSize - offsetX,
+      y: screenH - petSize - 50,
+      transparent: true,
+      frame: false,
+      alwaysOnTop: true,
+      resizable: false,
+      skipTaskbar: true,
+      hasShadow: false,
+      webPreferences: {
+        preload: path.join(__dirname, 'preload.js'),
+        contextIsolation: true,
+        nodeIntegration: false,
+      },
+    });
+
+    win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+    win.loadFile(path.join(__dirname, 'pet.html'), { query: { companion: `breed:${breedId}` } });
+    win.on('closed', () => {
+      companionWindows = companionWindows.filter(c => c.window !== win);
+    });
+
+    companionWindows.push({ window: win, breedId });
+    return breedId;
+  }
+
+  function removeCompanionWindow(breedId) {
+    const idx = companionWindows.findIndex(c => c.breedId === breedId);
+    if (idx >= 0) {
+      companionWindows[idx].window.close();
+      companionWindows.splice(idx, 1);
+    }
+  }
+
+  ipcMain.handle('add-companion', (_, breedId) => {
+    if (companionWindows.length >= 2) return { error: 'max_companions' };
+    createCompanionWindow(breedId);
+    const config = loadConfig();
+    if (!config.companions) config.companions = [];
+    if (!config.companions.includes(breedId)) config.companions.push(breedId);
+    saveConfig(config);
+    return { ok: true };
+  });
+
+  ipcMain.on('remove-companion', (_, breedId) => {
+    removeCompanionWindow(breedId);
+    const config = loadConfig();
+    config.companions = (config.companions || []).filter(c => c !== breedId);
+    saveConfig(config);
+  });
+
+  ipcMain.handle('get-companions', () => {
+    return companionWindows.map(c => c.breedId);
+  });
+
+  // Restore companions on startup
+  setTimeout(() => {
+    const config = loadConfig();
+    const companions = config.companions || [];
+    for (const breedId of companions.slice(0, 2)) {
+      createCompanionWindow(breedId);
+    }
+  }, 2000);
+
+  // Hook into pomodoro completion for XP
+  const origPomodoroTick = pomodoroTick;
+  // We'll track pomodoro completions via a flag
+  let lastPomodoroSessions = pomodoroTimer.sessionsToday;
+  setInterval(() => {
+    if (pomodoroTimer.sessionsToday > lastPomodoroSessions) {
+      const diff = pomodoroTimer.sessionsToday - lastPomodoroSessions;
+      lastPomodoroSessions = pomodoroTimer.sessionsToday;
+      addXP(50 * diff, 'pomodoro');
+      const growth = getGrowth();
+      growth.pomodorosCompleted += diff;
+      const today = new Date().toISOString().slice(0, 10);
+      if (!growth.dailyLog[today]) growth.dailyLog[today] = { minutes: 0, pomodoros: 0 };
+      growth.dailyLog[today].pomodoros += diff;
+      saveGrowth(growth);
+    }
+  }, 5000);
+
+  // Power monitor: detect suspend/resume
+  powerMonitor.on('suspend', () => {
+    activityTracker.level = 'away';
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('activity-changed', { level: 'away' });
+    }
+  });
+  powerMonitor.on('resume', () => {
+    activityTracker.lastInput = Date.now();
+    activityTracker.events = [];
+  });
 });
 
 app.on('before-quit', () => {

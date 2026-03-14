@@ -7,7 +7,7 @@
   *::-webkit-scrollbar { display: none; }
   * { scrollbar-width: none; }
   html, body {
-    width: 240px;
+    width: 420px;
     height: 240px;
     overflow: visible;
     background: transparent;
@@ -81,22 +81,22 @@
   #mini-menu {
     position: absolute;
     top: 0; left: 50%;
-    transform: translateX(-50%) translateY(-4px) scale(0.96);
+    transform: translateX(-50%) translateY(-6px) scale(0.96);
     transform-origin: bottom center;
-    background: rgba(246,246,246,0.82);
+    background: rgba(246,246,246,0.85);
     backdrop-filter: blur(40px) saturate(1.8);
     -webkit-backdrop-filter: blur(40px) saturate(1.8);
-    border-radius: 8px;
+    border-radius: 12px;
     box-shadow:
       0 0 0 0.5px rgba(0,0,0,0.12),
-      0 8px 32px rgba(0,0,0,0.18),
-      0 2px 8px rgba(0,0,0,0.08);
-    padding: 4px;
+      0 10px 40px rgba(0,0,0,0.2),
+      0 2px 10px rgba(0,0,0,0.08);
+    padding: 6px;
     display: none;
     z-index: 999;
     white-space: nowrap;
     width: auto;
-    min-width: 120px;
+    min-width: 160px;
     max-width: calc(100vw - 16px);
     opacity: 0;
     transition: opacity 0.15s ease, transform 0.15s ease;
@@ -104,16 +104,16 @@
   #mini-menu.show {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 2px;
     opacity: 1;
-    transform: translateX(-50%) translateY(-4px) scale(1);
+    transform: translateX(-50%) translateY(-6px) scale(1);
   }
   .menu-btn {
     border: none;
     background: transparent;
-    border-radius: 5px;
-    padding: 4px 10px;
-    font-size: 13px;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 15px;
     font-family: -apple-system, "SF Pro Text", "Helvetica Neue", sans-serif;
     cursor: default;
     transition: background 0.06s, color 0.06s;
@@ -121,7 +121,7 @@
     color: #1d1d1f;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     line-height: 1.4;
     letter-spacing: -0.01em;
   }
@@ -129,12 +129,12 @@
     background: #007AFF;
     color: #fff;
   }
-  .menu-btn .icon { width: 16px; text-align: center; font-size: 13px; flex-shrink: 0; }
-  .menu-btn .label { flex: 1; }
+  .menu-btn .icon { width: 20px; text-align: center; font-size: 16px; flex-shrink: 0; }
+  .menu-btn .label { flex: 1; font-weight: 500; }
   .menu-divider {
     height: 1px;
-    background: rgba(0,0,0,0.1);
-    margin: 3px 8px;
+    background: rgba(0,0,0,0.08);
+    margin: 4px 10px;
   }
   .menu-btn.danger { color: #ff3b30; }
   .menu-btn.danger:hover { background: #ff3b30; color: #fff; }
@@ -156,73 +156,156 @@
     transform: translateX(-50%) translateY(0);
   }
   #chat-input-wrap {
-    position: fixed;
-    top: 6px;
+    position: absolute;
     left: 50%;
-    transform: translateX(-50%) scale(0.9);
+    transform: translateX(-50%) translateY(-6px) scale(0.92);
     display: none;
     z-index: 1000;
     opacity: 0;
-    transition: opacity 0.3s, transform 0.3s;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    background: rgba(255,255,255,0.88);
+    backdrop-filter: blur(20px) saturate(1.6);
+    -webkit-backdrop-filter: blur(20px) saturate(1.6);
+    border-radius: 20px;
+    padding: 5px 5px 5px 14px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.12), 0 0 0 0.5px rgba(0,0,0,0.06);
+    align-items: center;
+    gap: 6px;
+    width: calc(100vw - 20px);
+    max-width: 260px;
   }
   #chat-input-wrap.show {
     display: flex;
     opacity: 1;
-    transform: translateX(-50%) scale(1);
+    transform: translateX(-50%) translateY(0) scale(1);
   }
   #chat-input {
-    border: 1.5px solid #ddd;
-    border-radius: 16px;
-    padding: 8px 14px;
+    border: none;
+    padding: 8px 0;
     font-size: 14px;
-    width: calc(100vw - 24px);
-    max-width: 280px;
+    flex: 1;
+    min-width: 0;
     outline: none;
-    font-family: -apple-system, sans-serif;
-    background: rgba(255,255,255,0.95);
-    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    font-family: -apple-system, "SF Pro Text", sans-serif;
+    background: transparent;
+    color: #1c1c1e;
     -webkit-app-region: no-drag;
   }
-  #chat-input:focus { border-color: #ff9eaa; }
+  #chat-input::placeholder { color: #c7c7cc; }
+  #chat-send-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: #007aff;
+    color: #fff;
+    font-size: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s, transform 0.1s;
+    -webkit-app-region: no-drag;
+  }
+  #chat-send-btn:hover { background: #0066d6; }
+  #chat-send-btn:active { transform: scale(0.9); }
+  #chat-mic-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: #f2f2f7;
+    color: #636366;
+    font-size: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s, transform 0.1s, box-shadow 0.3s;
+    -webkit-app-region: no-drag;
+  }
+  #chat-mic-btn:hover { background: #e5e5ea; }
+  #chat-mic-btn:active { transform: scale(0.9); }
+  #chat-mic-btn.recording {
+    background: #ff3b30;
+    color: #fff;
+    animation: mic-pulse 1s ease-in-out infinite;
+  }
+  @keyframes mic-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,59,48,0.4); }
+    50% { box-shadow: 0 0 0 8px rgba(255,59,48,0); }
+  }
+  #recording-indicator {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 28px;
+    background: rgba(255,59,48,0.92);
+    backdrop-filter: blur(10px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    z-index: 2000;
+    border-radius: 0 0 8px 8px;
+    font-size: 12px;
+    color: #fff;
+    font-weight: 500;
+    font-family: -apple-system, "SF Pro Text", sans-serif;
+  }
+  #recording-indicator.show { display: flex; }
+  #recording-indicator .rec-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #fff;
+    animation: rec-blink 1s ease-in-out infinite;
+  }
+  @keyframes rec-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
   #speech-bubble {
     position: fixed;
-    top: 2px;
+    top: 6px;
     left: 50%;
-    transform: translateX(-50%) scale(0.8);
-    background: #fff;
-    color: #333;
-    font-size: 11px;
-    padding: 6px 10px;
-    border-radius: 12px;
+    transform: translateX(-50%) translateY(4px) scale(0.9);
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(16px) saturate(1.5);
+    -webkit-backdrop-filter: blur(16px) saturate(1.5);
+    color: #1c1c1e;
+    font-size: 14px;
+    padding: 10px 14px;
+    border-radius: 16px;
     white-space: pre-wrap;
     word-break: break-word;
-    max-width: calc(100vw - 20px);
-    max-height: 120px;
+    max-width: 400px;
+    max-height: 160px;
     overflow-y: auto;
     box-sizing: border-box;
     line-height: 1.5;
     opacity: 0;
-    transition: opacity 0.4s, transform 0.4s;
+    transition: opacity 0.3s ease, transform 0.3s ease;
     pointer-events: none;
     z-index: 999;
-    font-family: -apple-system, sans-serif;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.12);
-    border: 1px solid #eee;
+    font-family: -apple-system, "SF Pro Text", sans-serif;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.1), 0 0 0 0.5px rgba(0,0,0,0.05);
   }
   #speech-bubble::after {
     content: '';
     position: absolute;
-    bottom: -6px;
+    bottom: -7px;
     left: 50%;
     transform: translateX(-50%);
     width: 0; height: 0;
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-top: 6px solid #fff;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 7px solid rgba(255,255,255,0.9);
   }
   #speech-bubble.show {
     opacity: 1;
-    transform: translateX(-50%) scale(1);
+    transform: translateX(-50%) translateY(0) scale(1);
     pointer-events: auto;
   }
   #tip-banner {
@@ -415,6 +498,49 @@
   }
   .room-close-btn:hover { color: #e8756d; }
 
+  /* Widget bubble */
+  #widget-bubble {
+    display: none !important;
+  }
+  #widget-bubble.show {
+    display: block;
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+  #widget-bubble .widget-icon { margin-right: 3px; }
+  #widget-bubble .news-scroll {
+    display: inline-block;
+    animation: newsScroll 8s linear infinite;
+    white-space: nowrap;
+  }
+  @keyframes newsScroll {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+  }
+
+  /* Pomodoro display */
+  #pomodoro-display {
+    position: fixed;
+    top: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,99,71,0.9);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Menlo', monospace;
+    padding: 3px 10px;
+    border-radius: 0 0 8px 8px;
+    z-index: 998;
+    display: none;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(255,99,71,0.3);
+  }
+  #pomodoro-display.show { display: block; }
+  #pomodoro-display.break { background: rgba(76,175,80,0.9); box-shadow: 0 2px 8px rgba(76,175,80,0.3); }
+
   /* Remote pet overlay canvas */
   #remote-pet-canvas {
     position: absolute;
@@ -435,7 +561,8 @@
   <button class="menu-btn danger" onclick="menuAction('quit')"><span class="icon">✕</span><span class="label">退出</span></button>
 </div>
 <div id="speech-bubble"></div>
-<div id="chat-input-wrap"><input id="chat-input" placeholder="和我说话..." maxlength="50"></div>
+<div id="recording-indicator"><span class="rec-dot"></span><span id="rec-timer">0:00</span></div>
+<div id="chat-input-wrap"><input id="chat-input" placeholder="和我说话..." maxlength="50"><button id="chat-mic-btn" onclick="toggleRecording()">🎤</button><button id="chat-send-btn" onclick="sendChat()">↑</button></div>
 
 <span id="emotion"></span>
 <!-- Custom pet (user uploaded image) -->
@@ -445,6 +572,8 @@
 </div>
 
 <div id="tip-banner"></div>
+<div id="widget-bubble" onclick="cycleWidget()"></div>
+<div id="pomodoro-display"></div>
 
 <!-- Room panel -->
 <div id="room-panel">
@@ -823,12 +952,73 @@
 <script src="../node_modules/peerjs/dist/peerjs.min.js"></script>
 <script src="network.js"></script>
 <script>
+// === Companion mode detection ===
+const urlParams = new URLSearchParams(window.location.search);
+const isCompanion = urlParams.has('companion');
+const companionBreed = urlParams.get('companion');
+
 // === Pet mode detection ===
 let petMode = 'default'; // 'default' | 'breed' | 'custom'
 let currentBreed = null;
 let currentAccessories = {};
 let breedAnimFrame = null;
 let isCustomPet = false;
+let currentSvgVariant = 'classic';
+
+// SVG Dog color variants
+const SVG_DOG_VARIANTS = [
+  { id: 'classic', name: '经典小狗', colors: { body: '#F5F0E8', stroke: '#333', tongue: '#FF8B8B', eye: '#333', nose: '#333' } },
+  { id: 'brown',   name: '棕色小狗', colors: { body: '#C49A6C', stroke: '#5C3A1E', tongue: '#FF8B8B', eye: '#2C1810', nose: '#2C1810' } },
+  { id: 'golden',  name: '金毛小狗', colors: { body: '#E8C97A', stroke: '#8B6914', tongue: '#FF7070', eye: '#3D2B1F', nose: '#3D2B1F' } },
+  { id: 'black',   name: '黑色小狗', colors: { body: '#3A3A3A', stroke: '#111', tongue: '#FF6B7A', eye: '#F0E68C', nose: '#222' } },
+  { id: 'white',   name: '白色小狗', colors: { body: '#FAFAFA', stroke: '#999', tongue: '#FFB0B0', eye: '#333', nose: '#555' } },
+  { id: 'gray',    name: '灰色小狗', colors: { body: '#B0B0B0', stroke: '#4A4A4A', tongue: '#FF8B8B', eye: '#222', nose: '#333' } },
+  { id: 'orange',  name: '橘色小狗', colors: { body: '#F0A050', stroke: '#8B4513', tongue: '#FF7070', eye: '#3D2B1F', nose: '#3D2B1F' } },
+  { id: 'pink',    name: '粉色小狗', colors: { body: '#FFD0D0', stroke: '#CC6677', tongue: '#FF5C8A', eye: '#8B4560', nose: '#CC6677' } },
+];
+
+// Store original SVG innerHTML for clean re-coloring
+const _svgOriginals = {};
+document.querySelectorAll('.dog-svg').forEach(svg => {
+  _svgOriginals[svg.id] = svg.innerHTML;
+});
+
+function applySvgDogColors(variantId) {
+  const variant = SVG_DOG_VARIANTS.find(v => v.id === variantId);
+  if (!variant) return;
+  currentSvgVariant = variantId;
+  const c = variant.colors;
+  // Always restore from original first, then replace colors via DOM
+  document.querySelectorAll('.dog-svg').forEach(svg => {
+    if (_svgOriginals[svg.id]) {
+      svg.innerHTML = _svgOriginals[svg.id];
+    }
+    // Body fills: large ellipses, circles, ear paths with fill="#F5F0E8"
+    svg.querySelectorAll('[fill="#F5F0E8"]').forEach(el => el.setAttribute('fill', c.body));
+    // Tongue: fill="#FF8B8B"
+    svg.querySelectorAll('[fill="#FF8B8B"]').forEach(el => el.setAttribute('fill', c.tongue));
+    // All strokes
+    svg.querySelectorAll('[stroke="#333"]').forEach(el => el.setAttribute('stroke', c.stroke));
+    // Eye: small circles with fill="#333" (r <= 3)
+    svg.querySelectorAll('circle[fill="#333"]').forEach(el => {
+      if (parseFloat(el.getAttribute('r')) <= 3) el.setAttribute('fill', c.eye);
+    });
+    // Nose: small ellipses with fill="#333" (rx <= 5)
+    svg.querySelectorAll('ellipse[fill="#333"]').forEach(el => {
+      if (parseFloat(el.getAttribute('rx')) <= 5) el.setAttribute('fill', c.nose);
+    });
+  });
+}
+
+function resetSvgDogColors() {
+  // Restore all SVGs to original
+  document.querySelectorAll('.dog-svg').forEach(svg => {
+    if (_svgOriginals[svg.id]) {
+      svg.innerHTML = _svgOriginals[svg.id];
+    }
+  });
+  currentSvgVariant = 'classic';
+}
 
 const breedCanvas = document.getElementById('breed-pet-canvas');
 const breedCtx = breedCanvas.getContext('2d');
@@ -836,6 +1026,7 @@ const breedCtx = breedCanvas.getContext('2d');
 async function checkPetMode() {
   const petInfo = await window.petAPI.getActivePet();
   if (petInfo.accessories) currentAccessories = petInfo.accessories;
+  if (petInfo.personality) currentPersonality = petInfo.personality;
 
   if (petInfo.type === 'custom' && petInfo.data && petInfo.data.imageDataUrl) {
     petMode = 'custom';
@@ -848,7 +1039,6 @@ async function checkPetMode() {
     if (currentBreed) {
       showBreedPet();
     } else {
-      // Fallback to default
       petMode = 'default';
       showDefaultPet();
     }
@@ -856,6 +1046,12 @@ async function checkPetMode() {
     petMode = 'default';
     isCustomPet = false;
     showDefaultPet();
+    // Apply variant colors if specified
+    if (petInfo.variant) {
+      applySvgDogColors(petInfo.variant);
+    } else {
+      resetSvgDogColors();
+    }
   }
 }
 
@@ -881,6 +1077,46 @@ function showBreedPet() {
   startBreedAnimation();
 }
 
+// === Pet scaling ===
+let currentPetSize = 200;
+
+async function applyPetScale() {
+  const { petSize } = await window.petAPI.getBounds();
+  const size = petSize || 200;
+  currentPetSize = size;
+  const px = size + 'px';
+
+  // SVG dog container — SVGs have viewBox so they scale with CSS size
+  const petEl = document.getElementById('pet');
+  petEl.style.width = px;
+  petEl.style.height = px;
+  document.querySelectorAll('.dog-svg').forEach(svg => {
+    svg.style.width = px;
+    svg.style.height = px;
+  });
+
+  // Canvas breed pet — resize canvas and CSS
+  const bc = document.getElementById('breed-pet-canvas');
+  bc.width = size;
+  bc.height = size;
+  bc.style.width = px;
+  bc.style.height = px;
+
+  // Custom pet container
+  const cp = document.getElementById('custom-pet-container');
+  cp.style.width = px;
+  cp.style.height = px;
+
+  // Remote pet canvas
+  const rc = document.getElementById('remote-pet-canvas');
+  if (rc) {
+    rc.width = size;
+    rc.height = size;
+    rc.style.width = px;
+    rc.style.height = px;
+  }
+}
+
 // === Breed Canvas Animation ===
 function startBreedAnimation() {
   if (breedAnimFrame) cancelAnimationFrame(breedAnimFrame);
@@ -889,12 +1125,13 @@ function startBreedAnimation() {
     if (petMode !== 'breed' || !currentBreed) return;
     const t = Date.now() / 1000;
 
+    const sz = currentPetSize || 200;
     breedCtx.save();
     if (direction === -1) {
-      breedCtx.translate(200, 0);
+      breedCtx.translate(sz, 0);
       breedCtx.scale(-1, 1);
     }
-    renderPet(breedCtx, currentBreed, currentState, t, 200, currentAccessories, direction);
+    renderPet(breedCtx, currentBreed, currentState, t, sz, currentAccessories, direction);
     breedCtx.restore();
 
     breedAnimFrame = requestAnimationFrame(animate);
@@ -904,6 +1141,7 @@ function startBreedAnimation() {
 
 // Listen for config changes
 window.petAPI.onConfigChanged(async () => {
+  await applyPetScale();
   await checkPetMode();
   if (petMode === 'default') {
     setState('stand');
@@ -1008,7 +1246,7 @@ async function startWalking() {
       const { window: bounds, screen: screenSize } = await window.petAPI.getBounds();
       let newX = bounds.x + direction * 2;
       if (newX <= 0) direction = 1;
-      if (newX >= screenSize.width - 200) direction = -1;
+      if (newX >= screenSize.width - (currentPetSize || 200)) direction = -1;
       newX = bounds.x + direction * 2;
       window.petAPI.setPosition(newX, bounds.y);
     } catch(e) {}
@@ -1101,13 +1339,32 @@ const behaviors = [
   { name: 'zoomies', weight: 3, emotion: '⚡', after: 'sit' },
   { name: 'roll', weight: 3, emotion: '🤸', after: 'stand' },
   { name: 'flop', weight: 2, emotion: '😴', after: 'stand' },
+  // New actions / skills
+  { name: 'dig', weight: 3, emotion: '🕳️', after: 'stand' },
+  { name: 'bow', weight: 2, emotion: '🙏', after: 'stand' },
+  { name: 'playDead', weight: 2, emotion: '💀', after: 'stand' },
+  { name: 'spinTrick', weight: 3, emotion: '🌀', after: 'sit' },
+  { name: 'tantrum', weight: 2, emotion: '😤', after: 'sit' },
+  { name: 'headBob', weight: 3, emotion: '🎵', after: 'stand' },
+  { name: 'snack', weight: 3, emotion: '🍪', after: 'stand' },
+  { name: 'shy', weight: 2, emotion: '😳', after: 'stand' },
+  { name: 'sing', weight: 3, emotion: '🎤', after: 'stand' },
+  { name: 'handshake', weight: 2, emotion: '🤝', after: 'stand' },
+  { name: 'frisbee', weight: 3, emotion: '🥏', after: 'stand' },
+  { name: 'butterfly', weight: 3, emotion: '🦋', after: 'stand' },
 ];
 
 function pickRandomBehavior() {
-  const totalWeight = behaviors.reduce((sum, b) => sum + b.weight, 0);
+  const personality = PERSONALITIES[currentPersonality];
+  const pw = personality ? personality.behaviorWeights : {};
+  const weighted = behaviors.map(b => ({
+    ...b,
+    weight: pw[b.name] !== undefined ? pw[b.name] : b.weight,
+  }));
+  const totalWeight = weighted.reduce((sum, b) => sum + b.weight, 0);
   let r = Math.random() * totalWeight;
-  for (const b of behaviors) { r -= b.weight; if (r <= 0) return b; }
-  return behaviors[0];
+  for (const b of weighted) { r -= b.weight; if (r <= 0) return b; }
+  return weighted[0];
 }
 
 let autoTimer = null;
@@ -1231,6 +1488,11 @@ function hideMiniMenu() {
 
 // Click anywhere to dismiss mini menu
 document.addEventListener('click', (e) => {
+  // Click outside chat input to dismiss it
+  if (chatVisible && !chatWrap.contains(e.target)) {
+    chatWrap.classList.remove('show');
+    chatVisible = false;
+  }
   if (miniMenu.classList.contains('show') && !miniMenu.contains(e.target)) {
     hideMiniMenu();
   }
@@ -1253,6 +1515,18 @@ function menuAction(action) {
     setState(action, 'stand');
     if (action === 'beg') showEmotion('🥺');
     if (action === 'jump') showEmotion('⭐');
+    if (action === 'dig') showEmotion('🕳️');
+    if (action === 'bow') showEmotion('🙏');
+    if (action === 'playDead') showEmotion('💀');
+    if (action === 'spinTrick') showEmotion('🌀');
+    if (action === 'tantrum') showEmotion('😤');
+    if (action === 'headBob') showEmotion('🎵');
+    if (action === 'snack') showEmotion('🍪');
+    if (action === 'shy') showEmotion('😳');
+    if (action === 'sing') showEmotion('🎤');
+    if (action === 'handshake') showEmotion('🤝');
+    if (action === 'frisbee') showEmotion('🥏');
+    if (action === 'butterfly') showEmotion('🦋');
   }
 }
 
@@ -1303,6 +1577,296 @@ function getTimeGreeting() {
 let lastGreetingHour = -1;
 let lastProactiveTime = Date.now();
 
+// === Activity Awareness System ===
+let currentActivityLevel = 'idle';
+
+async function pollActivityState() {
+  try {
+    const state = await window.petAPI.getActivityState();
+    const prevLevel = currentActivityLevel;
+    currentActivityLevel = state.level;
+    // React to activity changes
+    if (prevLevel !== state.level) {
+      onActivityLevelChanged(state.level, prevLevel);
+    }
+  } catch(e) {}
+}
+
+function onActivityLevelChanged(level, prev) {
+  if (isDragging) return;
+  switch (level) {
+    case 'busy':
+      // Stay quiet, don't interrupt
+      if (!isInputMirroring && currentState !== 'typing' && currentState !== 'click') {
+        // Silently watch
+      }
+      break;
+    case 'active':
+      // Occasionally react
+      if (Math.random() < 0.3 && currentState === 'stand') {
+        showEmotion('👀', 1500);
+      }
+      break;
+    case 'idle':
+      // Come interact
+      if (prev === 'busy' || prev === 'active') {
+        if (Math.random() < 0.5) {
+          setState('tilt', 'stand');
+          showSpeech('休息一下？😊', 3000);
+        }
+      }
+      break;
+    case 'away':
+      // Go to sleep
+      if (currentState !== 'sleep') {
+        setState('yawn', 'sleep');
+        showEmotion('💤', 3000);
+      }
+      break;
+  }
+}
+
+// Also listen for push notifications from main process
+if (window.petAPI.onActivityChanged) {
+  window.petAPI.onActivityChanged((data) => {
+    const prev = currentActivityLevel;
+    currentActivityLevel = data.level;
+    onActivityLevelChanged(data.level, prev);
+  });
+}
+
+// Poll every 10 seconds
+setInterval(pollActivityState, 10000);
+
+// === AI Personality System ===
+const PERSONALITIES = {
+  cheerful: {
+    name: '开朗活泼', emoji: '😄',
+    prompt: '你是一只超级开朗活泼的小狗，总是充满能量和热情！说话带很多感叹号，爱用可爱的语气词。喜欢给人加油打气！',
+    chatFreq: 0.4,
+    emotions: ['😄','🎉','💕','✨','🌟'],
+    behaviorWeights: { walk: 25, jump: 8, dance: 8, chase: 6, stand: 10 },
+  },
+  tsundere: {
+    name: '傲娇', emoji: '😤',
+    prompt: '你是一只傲娇的小狗，嘴上说不要身体很诚实。经常用"哼"、"才不是呢"、"别误会了"这类口吻。偶尔流露真心时会害羞。',
+    chatFreq: 0.2,
+    emotions: ['😤','💢','😒','...💕','哼'],
+    behaviorWeights: { stand: 20, sit: 15, tilt: 8, walk: 10 },
+  },
+  clingy: {
+    name: '粘人', emoji: '🥺',
+    prompt: '你是一只超级粘人的小狗，特别依赖主人，总想让主人关注你。说话像撒娇，经常用"嘛"、"呜"、"人家"。被冷落会难过。',
+    chatFreq: 0.5,
+    emotions: ['🥺','💕','😭','🤗','❤️'],
+    behaviorWeights: { beg: 10, tilt: 8, walk: 15, lonely: 5, stand: 10 },
+  },
+  chill: {
+    name: '佛系', emoji: '😌',
+    prompt: '你是一只很佛系的小狗，看淡一切，随遇而安。说话简短平和，偶尔冒出哲理。不会大惊小怪，一切都是"还行吧"。',
+    chatFreq: 0.1,
+    emotions: ['😌','☁️','🍃','💭','🧘'],
+    behaviorWeights: { sit: 25, sleep: 15, stand: 15, yawn: 8 },
+  },
+  nerd: {
+    name: '学霸', emoji: '🤓',
+    prompt: '你是一只爱学习的学霸小狗，对知识充满好奇。喜欢分享冷知识和有趣的事实。说话时偶尔引用名言或科学知识。',
+    chatFreq: 0.3,
+    emotions: ['🤓','📚','💡','🧐','✍️'],
+    behaviorWeights: { typing: 5, tilt: 10, stand: 15, sit: 15 },
+  },
+  foodie: {
+    name: '吃货', emoji: '🤤',
+    prompt: '你是一只超爱吃的小狗，脑子里全是美食。说话总会扯到吃的，经常饿，对食物的描述特别生动。最爱骨头和肉肉。',
+    chatFreq: 0.3,
+    emotions: ['🤤','🍖','😋','🦴','🍕'],
+    behaviorWeights: { beg: 10, walk: 15, stand: 12, sniff: 5, sit: 10 },
+  },
+};
+
+let currentPersonality = 'cheerful'; // default
+
+// === Desktop Widget System ===
+let widgetMode = 0; // 0=news, 1=weather, 2=off
+let widgetEnabled = true;
+let cachedWeather = null;
+let cachedNews = null;
+let newsIndex = 0;
+const widgetBubble = document.getElementById('widget-bubble');
+
+function updateWidget() {
+  if (!widgetEnabled) {
+    widgetBubble.classList.remove('show');
+    return;
+  }
+  switch (widgetMode) {
+    case 0: // Hot news
+      if (cachedNews && cachedNews.length > 0) {
+        const item = cachedNews[newsIndex % cachedNews.length];
+        widgetBubble.innerHTML = `<span class="widget-icon">🔥</span><span class="news-scroll">${item.title}</span>`;
+        widgetBubble.classList.add('show');
+      } else {
+        widgetBubble.innerHTML = '<span class="widget-icon">🔥</span>加载热点...';
+        widgetBubble.classList.add('show');
+        fetchNews();
+      }
+      break;
+    case 1: // Weather
+      if (cachedWeather) {
+        widgetBubble.innerHTML = `<span class="widget-icon">${cachedWeather.icon}</span>${cachedWeather.temp}°C ${cachedWeather.desc}`;
+        widgetBubble.classList.add('show');
+      } else {
+        widgetBubble.innerHTML = '<span class="widget-icon">🌤</span>加载天气...';
+        widgetBubble.classList.add('show');
+        fetchWeather();
+      }
+      break;
+    default:
+      widgetBubble.classList.remove('show');
+  }
+}
+
+async function fetchWeather() {
+  try {
+    const w = await window.petAPI.getWeather();
+    if (w) {
+      cachedWeather = w;
+      if (widgetMode === 1) updateWidget();
+    }
+  } catch(e) {}
+}
+
+async function fetchNews() {
+  try {
+    const news = await window.petAPI.getNews();
+    if (news && news.length > 0) {
+      cachedNews = news;
+      newsIndex = 0;
+      if (widgetMode === 0) updateWidget();
+    }
+  } catch(e) {}
+}
+
+function cycleWidget() {
+  if (widgetMode === 0 && cachedNews && cachedNews.length > 0) {
+    // Click on news → show next headline
+    newsIndex = (newsIndex + 1) % cachedNews.length;
+    updateWidget();
+  } else {
+    widgetMode = (widgetMode + 1) % 3;
+    updateWidget();
+  }
+}
+
+// Auto-rotate news every 10s
+setInterval(() => {
+  if (widgetEnabled && widgetMode === 0 && cachedNews && cachedNews.length > 0) {
+    newsIndex = (newsIndex + 1) % cachedNews.length;
+    updateWidget();
+  }
+}, 10000);
+
+// Auto-switch between news and weather every 60s
+setInterval(() => {
+  if (widgetEnabled && widgetMode < 2) {
+    widgetMode = widgetMode === 0 ? 1 : 0;
+    updateWidget();
+  }
+}, 60000);
+
+// Fetch news & weather on start
+fetchNews();
+fetchWeather();
+// Refresh news every 30 min
+setInterval(() => fetchNews(), 30 * 60 * 1000);
+// Initial widget display
+setTimeout(() => updateWidget(), 1000);
+
+// === Pomodoro Timer UI ===
+const pomodoroDisplay = document.getElementById('pomodoro-display');
+let pomodoroState = 'stopped';
+
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+}
+
+if (window.petAPI.onPomodoroTick) {
+  window.petAPI.onPomodoroTick((data) => {
+    const prevState = pomodoroState;
+    pomodoroState = data.state;
+
+    if (data.state === 'working') {
+      pomodoroDisplay.textContent = `🍅 ${formatTime(data.remaining)}`;
+      pomodoroDisplay.className = 'show';
+      // Keep pet calm during focus
+      if (prevState !== 'working' && currentState !== 'sit' && currentState !== 'stand' && currentState !== 'typing' && currentState !== 'click') {
+        setState('sit');
+      }
+    } else if (data.state === 'break') {
+      pomodoroDisplay.textContent = `☕ ${formatTime(data.remaining)}`;
+      pomodoroDisplay.className = 'show break';
+      // Energetic during break
+      if (prevState === 'working') {
+        setState('jump', 'stand');
+        showEmotion('🎉', 2000);
+        showSpeech('休息一下吧！🍅', 3000);
+      }
+    } else {
+      pomodoroDisplay.className = '';
+      if (prevState === 'break') {
+        showSpeech('番茄钟结束啦！今天也辛苦了~', 3000);
+      }
+    }
+  });
+}
+
+// Listen for sedentary reminder
+if (window.petAPI.onActivityChanged) {
+  // Reuse the channel from preload
+}
+// Sedentary reminder via IPC
+const { ipcRenderer: _ipcPet } = { ipcRenderer: null }; // preload handles this
+// We'll listen via a custom event from preload
+
+// === Growth System UI ===
+if (window.petAPI.onLevelUp) {
+  window.petAPI.onLevelUp((data) => {
+    setState('jump', 'stand');
+    showEmotion('🎉', 3000);
+    let msg = `我升到 Lv${data.level} 啦！`;
+    if (data.reward) msg += `解锁了${data.reward}！`;
+    showSpeech(msg, 5000);
+  });
+}
+
+// === Clipboard Assistant UI ===
+if (window.petAPI.onClipboardChanged) {
+  window.petAPI.onClipboardChanged((data) => {
+    if (data.result) {
+      const prefix = data.type === 'color' ? '' : data.type === 'english' ? '📝 ' : data.type === 'code' ? '💻 ' : '🔗 ';
+      showSpeech(prefix + data.result, 5000);
+      if (data.type === 'color') {
+        // Show color swatch via emotion
+        showEmotion('🎨', 2000);
+      } else {
+        showEmotion('📋', 1500);
+      }
+      setState('tilt', 'stand');
+    }
+  });
+}
+
+// Sedentary reminder
+if (window.petAPI.onSedentaryReminder) {
+  window.petAPI.onSedentaryReminder(() => {
+    setState('stretch', 'stand');
+    showEmotion('🧘', 3000);
+    showSpeech('站起来活动一下吧~已经连续工作很久了！💪', 5000);
+  });
+}
+
 function proactiveInteraction() {
   if (isDragging || currentState === 'sleep') return;
 
@@ -1351,8 +1915,9 @@ function proactiveInteraction() {
     return;
   }
 
-  // Random chat (lower frequency when user is active)
-  if (now - lastProactiveTime > 45000 && idleTime > 15000 && Math.random() < 0.3) {
+  // Random chat (frequency based on personality)
+  const chatFreq = PERSONALITIES[currentPersonality] ? PERSONALITIES[currentPersonality].chatFreq : 0.3;
+  if (now - lastProactiveTime > 45000 && idleTime > 15000 && Math.random() < chatFreq) {
     const chat = randomChats[Math.floor(Math.random() * randomChats.length)];
     showSpeech(chat, 3000);
     // Small accompanying action
@@ -1370,6 +1935,7 @@ let chatVisible = false;
 
 function toggleChat() {
   chatVisible = !chatVisible;
+  chatWrap.style.top = currentPetSize + 'px';
   chatWrap.classList.toggle('show', chatVisible);
   if (chatVisible) chatInput.focus();
 }
@@ -1395,6 +1961,18 @@ const chatRules = [
   { match: /工作|上班|work|coding|代码/i, replies: ['加油加油！你是最棒的！💪', '记得摸鱼…不是，记得休息！😏', '我帮你看着老板！👀'] },
   { match: /再见|拜拜|bye/i, replies: ['拜拜~我还在这里等你哦~👋', '不要走太久啦~ 🥺', '回来要摸摸我哦！'] },
   { match: /拉屎|便便|poop|粑粑/i, replies: ['哎呀…要文明养犬哦！😳'], action: 'poop' },
+  { match: /挖|dig|洞/i, replies: ['我来挖挖看！🕳️', '藏骨头的时间到了！'], action: 'dig' },
+  { match: /作揖|拜年|拜拜|恭喜/i, replies: ['恭喜恭喜！🙏', '新年快乐！给你拜年啦~'], action: 'bow' },
+  { match: /装死|play dead|死/i, replies: ['啊…我倒下了…💀', '演技满分吧？😏'], action: 'playDead' },
+  { match: /转圈|转|spin/i, replies: ['转转转！🌀', '看我转圈圈~好晕！'], action: 'spinTrick' },
+  { match: /撒泼|耍赖|不要|tantrum/i, replies: ['不要不要不要！😤', '我就要嘛！哼！'], action: 'tantrum' },
+  { match: /摇头|晃脑|听歌|music/i, replies: ['好好听啊~🎵', '我也跟着摇~'], action: 'headBob' },
+  { match: /偷吃|零食|snack|饼干/i, replies: ['才没有偷吃呢…🍪', '嘘…别告诉主人！'], action: 'snack' },
+  { match: /害羞|shy|不好意思/i, replies: ['人家…害羞了啦~😳', '别看我…//'], action: 'shy' },
+  { match: /唱歌|sing|嚎|叫/i, replies: ['啊呜~~~🎤', '我的歌声超好听的！'], action: 'sing' },
+  { match: /握手|shake hand|手/i, replies: ['给你握手！🤝', '你好你好！爪爪~'], action: 'handshake' },
+  { match: /飞盘|frisbee|接/i, replies: ['扔过来！我接！🥏', '看我的！'], action: 'frisbee' },
+  { match: /蝴蝶|butterfly|蝶/i, replies: ['哇！好漂亮的蝴蝶！🦋', '别飞走呀~'], action: 'butterfly' },
 ];
 
 const defaultReplies = [
@@ -1468,19 +2046,138 @@ async function checkAI() {
 }
 checkAI();
 
+async function sendChat() {
+  const msg = chatInput.value;
+  if (!msg.trim()) return;
+  chatInput.value = '';
+  lastInteraction = Date.now();
+  chatWrap.classList.remove('show');
+  chatVisible = false;
+  await petReply(msg);
+}
+
 chatInput.addEventListener('keydown', async (e) => {
   if (e.key === 'Enter') {
-    const msg = chatInput.value;
-    chatInput.value = '';
-    lastInteraction = Date.now();
-    chatWrap.classList.remove('show');
-    chatVisible = false;
-    await petReply(msg);
+    await sendChat();
   } else if (e.key === 'Escape') {
     chatWrap.classList.remove('show');
     chatVisible = false;
   }
 });
+
+// === Recording System ===
+let isRecording = false;
+let mediaRecorder = null;
+let recordingChunks = [];
+let recordingTimer = null;
+let recordingSeconds = 0;
+const MAX_RECORDING_SECONDS = 120; // 2 minutes max
+
+function toggleRecording() {
+  if (isRecording) {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+}
+
+async function startRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+    recordingChunks = [];
+
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) recordingChunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(recordingChunks, { type: 'audio/webm' });
+      stream.getTracks().forEach(t => t.stop());
+      processRecording(blob);
+    };
+
+    mediaRecorder.start();
+    isRecording = true;
+    recordingSeconds = 0;
+
+    // UI updates
+    document.getElementById('chat-mic-btn').classList.add('recording');
+    document.getElementById('recording-indicator').classList.add('show');
+    updateRecTimer();
+
+    recordingTimer = setInterval(() => {
+      recordingSeconds++;
+      updateRecTimer();
+      if (recordingSeconds >= MAX_RECORDING_SECONDS) {
+        stopRecording();
+      }
+    }, 1000);
+
+  } catch (e) {
+    showSpeech('无法访问麦克风~ 🎤', 3000);
+  }
+}
+
+function stopRecording() {
+  if (!isRecording || !mediaRecorder) return;
+  isRecording = false;
+  mediaRecorder.stop();
+  clearInterval(recordingTimer);
+  document.getElementById('chat-mic-btn').classList.remove('recording');
+  document.getElementById('recording-indicator').classList.remove('show');
+}
+
+function updateRecTimer() {
+  const m = Math.floor(recordingSeconds / 60);
+  const s = recordingSeconds % 60;
+  document.getElementById('rec-timer').textContent = m + ':' + String(s).padStart(2, '0');
+}
+
+async function processRecording(blob) {
+  showSpeech('💾 保存录音中...', 5000);
+  setState('tilt', 'stand');
+
+  // Convert blob to base64
+  const reader = new FileReader();
+  reader.onloadend = async () => {
+    const base64 = reader.result.split(',')[1];
+    const filename = 'rec-' + Date.now() + '.webm';
+
+    // Save file
+    const saveResult = await window.petAPI.saveRecording(base64, filename);
+    if (!saveResult || saveResult.error) {
+      showSpeech('保存失败了~ 😢', 3000);
+      return;
+    }
+
+    // Transcribe
+    showSpeech('🎯 转写中...', 10000);
+    showEmotion('💭', 2000);
+    const transcribeResult = await window.petAPI.transcribeAudio(saveResult.filePath);
+
+    if (!transcribeResult || transcribeResult.error) {
+      showSpeech(transcribeResult ? transcribeResult.text : '转写失败了~ 😢', 4000);
+      return;
+    }
+
+    const text = transcribeResult.text;
+    if (!text || !text.trim()) {
+      showSpeech('没有听到声音哦~ 🤔', 3000);
+      return;
+    }
+
+    // Show transcribed text then send to AI
+    showSpeech('🗣️ ' + text, 3000);
+    lastInteraction = Date.now();
+
+    // Wait a bit then send to pet AI
+    setTimeout(async () => {
+      await petReply(text);
+    }, 1500);
+  };
+  reader.readAsDataURL(blob);
+}
 
 // === System Monitoring ===
 async function getSystemInfo() {
@@ -1820,11 +2517,29 @@ document.addEventListener('click', function(e) {
 });
 
 // === Start ===
-checkPetMode().then(() => {
-  if (petMode === 'default') {
+applyPetScale().then(() => {
+  if (isCompanion && companionBreed) {
+    // Companion mode: force breed pet
+    const breedId = companionBreed.replace('breed:', '');
+    currentBreed = getBreedById(breedId);
+    if (currentBreed) {
+      petMode = 'breed';
+      showBreedPet();
+    }
+    // Hide non-essential UI for companions
+    document.getElementById('mini-menu').style.display = 'none';
+    document.getElementById('chat-input-wrap').style.display = 'none';
+    widgetEnabled = false;
     setState('stand');
+    startAutoBehavior();
+  } else {
+    checkPetMode().then(() => {
+      if (petMode === 'default') {
+        setState('stand');
+      }
+      startAutoBehavior();
+    });
   }
-  startAutoBehavior();
 });
 
 // === Click-through for transparent areas ===
