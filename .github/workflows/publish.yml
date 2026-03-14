@@ -1,0 +1,48 @@
+name: Build & Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile input-watcher (universal binary)
+        run: |
+          cd src
+          swiftc -O -target arm64-apple-macosx10.13 -o input-watcher-arm64 input-watcher.swift
+          swiftc -O -target x86_64-apple-macosx10.13 -o input-watcher-x64 input-watcher.swift
+          lipo -create input-watcher-arm64 input-watcher-x64 -output input-watcher
+          rm input-watcher-arm64 input-watcher-x64
+          chmod +x input-watcher
+
+      - name: Build & Publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npx electron-builder --mac --arm64 --x64 --publish always 2>&1 || true
+          # Fix: manually upload files with ASCII names if Chinese names fail
+          VERSION=$(node -p "require('./package.json').version")
+          cd dist
+          for f in *.dmg *.zip; do
+            ASCII_NAME=$(echo "$f" | sed 's/桌面小狗/DesktopPet/g')
+            if [ "$f" != "$ASCII_NAME" ]; then
+              cp "$f" "$ASCII_NAME"
+              gh release upload "v${VERSION}" "$ASCII_NAME" --clobber || true
+            fi
+          done
+          # Upload latest-mac.yml
+          if [ -f latest-mac.yml ]; then
+            gh release upload "v${VERSION}" latest-mac.yml --clobber || true
+          fi
