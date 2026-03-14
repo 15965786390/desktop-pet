@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('petAPI', {
   onConfigChanged: (callback) => ipcRenderer.on('config-changed', (_, cfg) => callback(cfg)),
   quitApp: () => ipcRenderer.send('quit-app'),
   openSettings: () => ipcRenderer.send('open-settings'),
+  setIgnoreMouseEvents: (ignore, opts) => ipcRenderer.send('set-ignore-mouse', ignore, opts),
   onInputEvent: (callback) => ipcRenderer.on('input-event', (_, type) => callback(type)),
   getScreenSize: () => ipcRenderer.invoke('get-screen-size'),
   getSystemInfo: () => ipcRenderer.invoke('get-system-info'),

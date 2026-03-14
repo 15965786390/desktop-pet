@@ -408,6 +408,13 @@ function setupIPC() {
   ipcMain.on('quit-app', () => { app.quit(); });
   ipcMain.on('open-settings', () => { createSettingsWindow(); });
 
+  // Mouse click-through for transparent areas
+  ipcMain.on('set-ignore-mouse', (_, ignore, opts) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.setIgnoreMouseEvents(ignore, opts || {});
+    }
+  });
+
   // Save cartoon pet (from canvas dataURL)
   ipcMain.handle('save-cartoon-pet', async (_, name, dataUrl) => {
     try {

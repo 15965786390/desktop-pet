@@ -75,32 +75,65 @@
   #breed-pet-canvas:active { cursor: grabbing; }
 
   /* Mini popup menu */
+  /* macOS native context menu style */
   #mini-menu {
     position: absolute;
-    top: 5px; left: 50%;
-    transform: translateX(-50%);
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(10px);
-    border-radius: 10px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-    padding: 6px;
+    top: 0; left: 50%;
+    transform: translateX(-50%) translateY(-4px) scale(0.96);
+    transform-origin: bottom center;
+    background: rgba(246,246,246,0.82);
+    backdrop-filter: blur(40px) saturate(1.8);
+    -webkit-backdrop-filter: blur(40px) saturate(1.8);
+    border-radius: 8px;
+    box-shadow:
+      0 0 0 0.5px rgba(0,0,0,0.12),
+      0 8px 32px rgba(0,0,0,0.18),
+      0 2px 8px rgba(0,0,0,0.08);
+    padding: 4px;
     display: none;
     z-index: 999;
     white-space: nowrap;
+    width: 148px;
+    opacity: 0;
+    transition: opacity 0.15s ease, transform 0.15s ease;
   }
-  #mini-menu.show { display: flex; gap: 4px; }
+  #mini-menu.show {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    opacity: 1;
+    transform: translateX(-50%) translateY(-4px) scale(1);
+  }
   .menu-btn {
     border: none;
     background: transparent;
-    border-radius: 8px;
-    padding: 6px 10px;
+    border-radius: 5px;
+    padding: 4px 10px;
     font-size: 13px;
-    cursor: pointer;
-    transition: background 0.15s;
+    font-family: -apple-system, "SF Pro Text", "Helvetica Neue", sans-serif;
+    cursor: default;
+    transition: background 0.06s, color 0.06s;
+    text-align: left;
+    color: #1d1d1f;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1.4;
+    letter-spacing: -0.01em;
   }
-  .menu-btn:hover { background: #f0f0f0; }
+  .menu-btn:hover {
+    background: #007AFF;
+    color: #fff;
+  }
+  .menu-btn .icon { width: 16px; text-align: center; font-size: 13px; flex-shrink: 0; }
+  .menu-btn .label { flex: 1; }
+  .menu-divider {
+    height: 1px;
+    background: rgba(0,0,0,0.1);
+    margin: 3px 8px;
+  }
   .menu-btn.danger { color: #ff3b30; }
-  .menu-btn.danger:hover { background: #fff0f0; }
+  .menu-btn.danger:hover { background: #ff3b30; color: #fff; }
 
   #emotion {
     position: absolute;
@@ -385,11 +418,10 @@
 </head>
 <body>
 <div id="mini-menu">
-  <button class="menu-btn" onclick="menuAction('beg')">🥺 撒娇</button>
-  <button class="menu-btn" onclick="menuAction('jump')">⭐ 蹦跳</button>
-  <button class="menu-btn" onclick="menuAction('room')">🌐 联机</button>
-  <button class="menu-btn" onclick="menuAction('settings')">⚙️ 设置</button>
-  <button class="menu-btn danger" onclick="menuAction('quit')">✕ 退出</button>
+  <button class="menu-btn" onclick="menuAction('settings')"><span class="icon">⚙️</span><span class="label">设置</span></button>
+  <button class="menu-btn" onclick="menuAction('room')"><span class="icon">🌐</span><span class="label">联机</span></button>
+  <div class="menu-divider"></div>
+  <button class="menu-btn danger" onclick="menuAction('quit')"><span class="icon">✕</span><span class="label">退出</span></button>
 </div>
 <span id="emotion"></span>
 <div id="speech-bubble"></div>
@@ -1151,20 +1183,30 @@ const miniMenu = document.getElementById('mini-menu');
 let menuTimeout = null;
 
 function showMiniMenu() {
+  miniMenu.style.display = 'flex';
+  // Force reflow for animation
+  miniMenu.offsetHeight;
   miniMenu.classList.add('show');
   if (menuTimeout) clearTimeout(menuTimeout);
-  menuTimeout = setTimeout(() => miniMenu.classList.remove('show'), 4000);
+  menuTimeout = setTimeout(() => hideMiniMenu(), 5000);
+}
+
+function hideMiniMenu() {
+  miniMenu.classList.remove('show');
+  setTimeout(() => {
+    if (!miniMenu.classList.contains('show')) miniMenu.style.display = 'none';
+  }, 150);
 }
 
 // Click anywhere to dismiss mini menu
 document.addEventListener('click', (e) => {
   if (miniMenu.classList.contains('show') && !miniMenu.contains(e.target)) {
-    miniMenu.classList.remove('show');
+    hideMiniMenu();
   }
 });
 
 function menuAction(action) {
-  miniMenu.classList.remove('show');
+  hideMiniMenu();
   if (action === 'quit') {
     showEmotion('👋', 1500);
     setState('sit');
@@ -1750,6 +1792,57 @@ checkPetMode().then(() => {
   }
   startAutoBehavior();
 });
+
+// === Click-through for transparent areas ===
+// Default: window ignores mouse (clicks pass through to desktop)
+// When mouse enters a visible element: window captures mouse
+if (window.petAPI.setIgnoreMouseEvents) {
+  // Start in pass-through mode with forwarding (so we still get mousemove)
+  window.petAPI.setIgnoreMouseEvents(true, { forward: true });
+
+  // All interactive elements that should capture mouse
+  const interactiveEls = [
+    document.getElementById('pet'),
+    document.getElementById('breed-pet-canvas'),
+    document.getElementById('custom-pet-container'),
+    document.getElementById('mini-menu'),
+    document.getElementById('speech-bubble'),
+    document.getElementById('chat-input-wrap'),
+    document.getElementById('emotion'),
+  ].filter(Boolean);
+
+  // Room panel and status bar if they exist
+  const dynamicSelectors = ['#room-panel', '#status-bar', '#tip-banner'];
+
+  function getAllInteractive() {
+    const els = [...interactiveEls];
+    for (const sel of dynamicSelectors) {
+      const el = document.querySelector(sel);
+      if (el) els.push(el);
+    }
+    return els;
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    const els = getAllInteractive();
+    let overInteractive = false;
+    for (const el of els) {
+      if (!el.offsetParent && el.style.display === 'none') continue;
+      const rect = el.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) continue;
+      if (e.clientX >= rect.left && e.clientX <= rect.right &&
+          e.clientY >= rect.top && e.clientY <= rect.bottom) {
+        overInteractive = true;
+        break;
+      }
+    }
+    if (overInteractive) {
+      window.petAPI.setIgnoreMouseEvents(false);
+    } else {
+      window.petAPI.setIgnoreMouseEvents(true, { forward: true });
+    }
+  });
+}
 </script>
 </body>
 </html>
