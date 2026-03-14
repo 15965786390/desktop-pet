@@ -1566,8 +1566,10 @@ async function doCreateRoom() {
     showSpeech('联机模块未加载~', 3000);
     return;
   }
+  setupNetworkCallbacks();
   try {
-    const code = await PetNetwork.createRoom(nickname);
+    const result = await PetNetwork.createRoom(nickname);
+    const code = result.roomCode || result;
     showConnectedUI(code);
     startStateSync();
     showSpeech('🎉 房间创建成功！', 3000);
@@ -1588,6 +1590,7 @@ async function doJoinRoom() {
     showSpeech('联机模块未加载~', 3000);
     return;
   }
+  setupNetworkCallbacks();
   try {
     await PetNetwork.joinRoom(code, nickname);
     showConnectedUI(code);
@@ -1684,7 +1687,7 @@ function setupNetworkCallbacks() {
       item.className = 'member-item';
       const isOnline = m.status === 'connected' || m.status === 'online' || m.status === '在线';
       item.innerHTML =
-        '<span class="member-name">' + escapeHtml(m.name || '???') + '</span>' +
+        '<span class="member-name">' + escapeHtml(m.nickname || m.name || '???') + '</span>' +
         '<span class="member-status ' + (isOnline ? 'online' : 'offline') + '">' +
         (isOnline ? '在线' : '离开') + '</span>';
       memberListEl.appendChild(item);
