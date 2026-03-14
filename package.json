@@ -1,0 +1,49 @@
+{
+  "name": "desktop-pet",
+  "version": "1.1.0",
+  "description": "可爱的桌面宠物小狗",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:mac": "electron-builder --mac --arm64 --x64",
+    "build:win": "electron-builder --win",
+    "build": "electron-builder --mac --arm64 --x64 --win",
+    "publish": "electron-builder --mac --arm64 --x64 --publish always"
+  },
+  "build": {
+    "appId": "com.desktoppet.dog",
+    "productName": "桌面小狗",
+    "publish": {
+      "provider": "github",
+      "owner": "15965786390",
+      "repo": "desktop-pet"
+    },
+    "mac": {
+      "category": "public.app-category.entertainment",
+      "target": [
+        { "target": "dmg", "arch": ["arm64", "x64"] },
+        { "target": "zip", "arch": ["arm64", "x64"] }
+      ],
+      "icon": "build/icon.icns"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*"
+    ],
+    "asarUnpack": [
+      "src/input-watcher"
+    ]
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
+    "electron-updater": "^6.8.3",
+    "peerjs": "^1.5.5"
+  }
+}

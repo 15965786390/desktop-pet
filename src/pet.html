@@ -1,0 +1,1755 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; }
+  html, body {
+    width: 240px;
+    height: 240px;
+    overflow: visible;
+    background: transparent;
+    user-select: none;
+  }
+  #custom-pet-container {
+    animation: float 3s ease-in-out infinite;
+  }
+  #custom-pet-container:active { cursor: grabbing; }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  #pet {
+    width: 200px;
+    height: 200px;
+    cursor: grab;
+    position: relative;
+  }
+  #pet:active { cursor: grabbing; }
+  .dog-svg {
+    width: 200px;
+    height: 200px;
+    position: absolute;
+    top: 0; left: 0;
+    display: none;
+    transition: opacity 0.15s ease;
+  }
+  .dog-svg.active { display: block; }
+  .flipped { transform: scaleX(-1); }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
+  @keyframes bounce-flip {
+    0%, 100% { transform: scaleX(-1) translateY(0); }
+    50% { transform: scaleX(-1) translateY(-20px); }
+  }
+  .bouncing { animation: bounce 0.4s ease 3; }
+  .bouncing.flipped { animation: bounce-flip 0.4s ease 3; }
+  @keyframes breathe {
+    0%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(1.015); }
+  }
+  @keyframes breathe-flip {
+    0%, 100% { transform: scaleX(-1) scaleY(1); }
+    50% { transform: scaleX(-1) scaleY(1.015); }
+  }
+  .breathing { animation: breathe 2.5s ease-in-out infinite; }
+  .breathing.flipped { animation: breathe-flip 2.5s ease-in-out infinite; }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  .spinning { animation: spin 0.6s ease-in-out 3; }
+
+  /* Canvas-based breed pet */
+  #breed-pet-canvas {
+    display: none;
+    width: 200px;
+    height: 200px;
+    cursor: grab;
+    position: absolute;
+    top: 0; left: 0;
+  }
+  #breed-pet-canvas:active { cursor: grabbing; }
+
+  /* Mini popup menu */
+  #mini-menu {
+    position: absolute;
+    top: 5px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    padding: 6px;
+    display: none;
+    z-index: 999;
+    white-space: nowrap;
+  }
+  #mini-menu.show { display: flex; gap: 4px; }
+  .menu-btn {
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .menu-btn:hover { background: #f0f0f0; }
+  .menu-btn.danger { color: #ff3b30; }
+  .menu-btn.danger:hover { background: #fff0f0; }
+
+  #emotion {
+    position: absolute;
+    top: -5px;
+    right: 10px;
+    font-size: 24px;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    transform: translateY(5px);
+    pointer-events: none;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15));
+    z-index: 998;
+  }
+  #emotion.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  #chat-input-wrap {
+    position: fixed;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%) scale(0.9);
+    display: none;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+  }
+  #chat-input-wrap.show {
+    display: flex;
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+  #chat-input {
+    border: 1.5px solid #ddd;
+    border-radius: 14px;
+    padding: 5px 12px;
+    font-size: 12px;
+    width: 160px;
+    outline: none;
+    font-family: -apple-system, sans-serif;
+    background: rgba(255,255,255,0.95);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    -webkit-app-region: no-drag;
+  }
+  #chat-input:focus { border-color: #ff9eaa; }
+  #speech-bubble {
+    position: fixed;
+    top: 2px;
+    left: 50%;
+    transform: translateX(-50%) scale(0.8);
+    background: #fff;
+    color: #333;
+    font-size: 11px;
+    padding: 6px 10px;
+    border-radius: 12px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-width: 220px;
+    max-height: 120px;
+    overflow-y: auto;
+    line-height: 1.5;
+    opacity: 0;
+    transition: opacity 0.4s, transform 0.4s;
+    pointer-events: none;
+    z-index: 999;
+    font-family: -apple-system, sans-serif;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+    border: 1px solid #eee;
+  }
+  #speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid #fff;
+  }
+  #speech-bubble.show {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+    pointer-events: auto;
+  }
+  #tip-banner {
+    position: fixed;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%) scale(0.8);
+    background: rgba(76,175,80,0.92);
+    color: #fff;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.4s, transform 0.4s;
+    pointer-events: none;
+    z-index: 999;
+    font-family: -apple-system, sans-serif;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  #tip-banner.show {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+
+  /* Room panel */
+  #room-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    background: rgba(255, 243, 240, 0.97);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    padding: 16px;
+    display: none;
+    z-index: 1100;
+    width: 260px;
+    font-family: -apple-system, sans-serif;
+    border: 1.5px solid rgba(255,180,170,0.4);
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+  }
+  #room-panel.show {
+    display: block;
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  .room-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e8756d;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .room-section {
+    margin-bottom: 10px;
+  }
+  .room-label {
+    font-size: 11px;
+    color: #999;
+    margin-bottom: 4px;
+  }
+  .room-input {
+    width: 100%;
+    border: 1.5px solid #f0d0cc;
+    border-radius: 10px;
+    padding: 6px 10px;
+    font-size: 12px;
+    outline: none;
+    background: rgba(255,255,255,0.8);
+    box-sizing: border-box;
+    font-family: -apple-system, sans-serif;
+    -webkit-app-region: no-drag;
+  }
+  .room-input:focus { border-color: #ff9eaa; }
+  .room-input::placeholder { color: #cbb; }
+  .room-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .room-row .room-input { flex: 1; }
+  .room-btn {
+    border: none;
+    border-radius: 10px;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: -apple-system, sans-serif;
+    transition: background 0.15s, transform 0.1s;
+    white-space: nowrap;
+  }
+  .room-btn:active { transform: scale(0.96); }
+  .room-btn-primary {
+    background: linear-gradient(135deg, #ffb3a7, #ff8a80);
+    color: #fff;
+    font-weight: 500;
+  }
+  .room-btn-primary:hover { background: linear-gradient(135deg, #ffa599, #ff7b70); }
+  .room-btn-secondary {
+    background: #f5e6e3;
+    color: #c27a6f;
+  }
+  .room-btn-secondary:hover { background: #f0d8d4; }
+  .room-btn-danger {
+    background: #ffe5e5;
+    color: #e06060;
+  }
+  .room-btn-danger:hover { background: #ffd4d4; }
+  .room-code-display {
+    display: none;
+    background: #fff;
+    border-radius: 10px;
+    padding: 8px 12px;
+    text-align: center;
+    border: 1.5px dashed #ffb3a7;
+    margin-bottom: 8px;
+  }
+  .room-code-display .code-text {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: #e8756d;
+    font-family: 'Menlo', monospace;
+  }
+  .room-code-display .copy-btn {
+    font-size: 10px;
+    color: #ffb3a7;
+    cursor: pointer;
+    margin-top: 2px;
+    display: block;
+  }
+  .room-code-display .copy-btn:hover { color: #ff8a80; }
+  .member-list {
+    max-height: 100px;
+    overflow-y: auto;
+    margin-top: 6px;
+  }
+  .member-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #666;
+    background: rgba(255,255,255,0.6);
+    margin-bottom: 3px;
+  }
+  .member-item .member-name { font-weight: 500; }
+  .member-status {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 6px;
+  }
+  .member-status.online {
+    background: #e0f5e9;
+    color: #4caf50;
+  }
+  .member-status.offline {
+    background: #f0f0f0;
+    color: #999;
+  }
+  .room-connected-info {
+    display: none;
+  }
+  .room-join-controls {}
+  .room-divider {
+    border: none;
+    border-top: 1px solid #f0d0cc;
+    margin: 10px 0;
+  }
+  .room-close-btn {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    border: none;
+    background: none;
+    font-size: 14px;
+    cursor: pointer;
+    color: #caa;
+    padding: 2px 4px;
+  }
+  .room-close-btn:hover { color: #e8756d; }
+
+  /* Remote pet overlay canvas */
+  #remote-pet-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 200px;
+    height: 200px;
+    pointer-events: none;
+    z-index: 50;
+  }
+</style>
+</head>
+<body>
+<div id="mini-menu">
+  <button class="menu-btn" onclick="menuAction('beg')">🥺 撒娇</button>
+  <button class="menu-btn" onclick="menuAction('jump')">⭐ 蹦跳</button>
+  <button class="menu-btn" onclick="menuAction('room')">🌐 联机</button>
+  <button class="menu-btn" onclick="menuAction('settings')">⚙️ 设置</button>
+  <button class="menu-btn danger" onclick="menuAction('quit')">✕ 退出</button>
+</div>
+<span id="emotion"></span>
+<div id="speech-bubble"></div>
+<div id="chat-input-wrap"><input id="chat-input" placeholder="和我说话..." maxlength="50"></div>
+
+<!-- Custom pet (user uploaded image) -->
+<div id="custom-pet-container" style="display:none; width:200px; height:200px; cursor:grab; position:relative;">
+  <img id="custom-pet-img" src="" style="width:100%; height:100%; object-fit:contain;">
+  <span id="custom-emotion" style="position:absolute;top:-5px;right:10px;font-size:24px;opacity:0;transition:opacity 0.3s;pointer-events:none;"></span>
+</div>
+
+<div id="tip-banner"></div>
+
+<!-- Room panel -->
+<div id="room-panel">
+  <button class="room-close-btn" onclick="closeRoomPanel()">&times;</button>
+  <div class="room-title">&#x1F310; 联机房间</div>
+  <div class="room-section">
+    <div class="room-label">昵称</div>
+    <input id="room-nickname" class="room-input" placeholder="输入昵称..." maxlength="12">
+  </div>
+  <div class="room-join-controls">
+    <div class="room-section">
+      <button class="room-btn room-btn-primary" style="width:100%" onclick="doCreateRoom()">&#x2728; 创建房间</button>
+    </div>
+    <hr class="room-divider">
+    <div class="room-section">
+      <div class="room-label">房间号</div>
+      <div class="room-row">
+        <input id="room-code-input" class="room-input" placeholder="输入6位房间号" maxlength="6">
+        <button class="room-btn room-btn-secondary" onclick="doJoinRoom()">加入</button>
+      </div>
+    </div>
+  </div>
+  <div class="room-connected-info">
+    <div class="room-code-display" id="room-code-display">
+      <span class="code-text" id="room-code-text"></span>
+      <span class="copy-btn" onclick="copyRoomCode()">&#x1F4CB; 复制房间号</span>
+    </div>
+    <div class="room-section">
+      <div class="room-label">成员列表</div>
+      <div class="member-list" id="member-list"></div>
+    </div>
+    <hr class="room-divider">
+    <button class="room-btn room-btn-danger" style="width:100%" onclick="doLeaveRoom()">&#x1F6AA; 离开房间</button>
+  </div>
+</div>
+
+<!-- Canvas-based breed pet -->
+<canvas id="breed-pet-canvas" width="200" height="200"></canvas>
+<!-- Remote pet overlay canvas -->
+<canvas id="remote-pet-canvas" width="200" height="200"></canvas>
+
+<!-- Default dog (SVG) -->
+<div id="pet">
+  <!-- Stand -->
+  <svg class="dog-svg active" id="frame-stand" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="58" cy="72" rx="32" ry="20" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <circle cx="86" cy="48" r="18" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M74 34 L71 16 L82 30" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M92 32 L96 14 L101 28" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <circle cx="92" cy="45" r="2.5" fill="#333"/>
+    <ellipse cx="102" cy="50" rx="3.5" ry="2.5" fill="#333"/>
+    <path d="M102 53 Q98 59 95 56" fill="none" stroke="#333" stroke-width="1.5"/>
+    <path d="M98 56 Q96 63 100 63 Q104 63 102 56" fill="#FF8B8B" stroke="#333" stroke-width="1"/>
+    <line x1="42" y1="87" x2="42" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="53" y1="87" x2="53" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="67" y1="87" x2="67" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="76" y1="87" x2="76" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <path id="tail-stand" d="M28 65 Q18 44 24 38" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round">
+      <animate attributeName="d" values="M28 65 Q18 44 24 38;M28 65 Q15 50 18 44;M28 65 Q18 44 24 38" dur="0.6s" repeatCount="indefinite"/>
+    </path>
+  </svg>
+
+  <!-- Walk frame 1 -->
+  <svg class="dog-svg" id="frame-walk1" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="58" cy="72" rx="32" ry="20" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <circle cx="86" cy="46" r="18" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M74 32 L71 14 L82 28" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M92 30 L96 12 L101 26" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <circle cx="92" cy="43" r="2.5" fill="#333"/>
+    <ellipse cx="102" cy="48" rx="3.5" ry="2.5" fill="#333"/>
+    <path d="M102 51 Q98 57 95 54" fill="none" stroke="#333" stroke-width="1.5"/>
+    <path d="M98 54 Q96 61 100 61 Q104 61 102 54" fill="#FF8B8B" stroke="#333" stroke-width="1"/>
+    <line x1="40" y1="87" x2="32" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="52" y1="87" x2="60" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="65" y1="87" x2="72" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="76" y1="87" x2="68" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <path d="M28 65 Q16 48 22 40" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round">
+      <animate attributeName="d" values="M28 65 Q16 48 22 40;M28 65 Q20 42 28 36;M28 65 Q16 48 22 40" dur="0.3s" repeatCount="indefinite"/>
+    </path>
+  </svg>
+
+  <!-- Walk frame 2 -->
+  <svg class="dog-svg" id="frame-walk2" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="58" cy="72" rx="32" ry="20" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <circle cx="86" cy="46" r="18" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M74 32 L71 14 L82 28" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M92 30 L96 12 L101 26" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <circle cx="92" cy="43" r="2.5" fill="#333"/>
+    <ellipse cx="102" cy="48" rx="3.5" ry="2.5" fill="#333"/>
+    <path d="M102 51 Q98 57 95 54" fill="none" stroke="#333" stroke-width="1.5"/>
+    <path d="M98 54 Q96 61 100 61 Q104 61 102 54" fill="#FF8B8B" stroke="#333" stroke-width="1"/>
+    <line x1="40" y1="87" x2="48" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="52" y1="87" x2="44" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="65" y1="87" x2="58" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="76" y1="87" x2="84" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <path d="M28 65 Q20 42 28 36" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round">
+      <animate attributeName="d" values="M28 65 Q20 42 28 36;M28 65 Q16 48 22 40;M28 65 Q20 42 28 36" dur="0.3s" repeatCount="indefinite"/>
+    </path>
+  </svg>
+
+  <!-- Sit -->
+  <svg class="dog-svg" id="frame-sit" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="58" cy="78" rx="30" ry="24" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <circle cx="82" cy="48" r="18" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M70 34 L67 16 L78 30" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M88 32 L92 14 L97 28" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <circle cx="88" cy="45" r="2.5" fill="#333"/>
+    <ellipse cx="98" cy="50" rx="3.5" ry="2.5" fill="#333"/>
+    <path d="M98 53 Q94 59 91 56" fill="none" stroke="#333" stroke-width="1.5"/>
+    <line x1="50" y1="96" x2="50" y2="116" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="62" y1="96" x2="62" y2="116" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <path d="M38 90 Q30 104 40 110" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <path d="M34 88 Q24 100 34 108" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <path d="M30 72 Q18 55 24 46" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round">
+      <animate attributeName="d" values="M30 72 Q18 55 24 46;M30 72 Q15 60 16 52;M30 72 Q18 55 24 46" dur="0.5s" repeatCount="indefinite"/>
+    </path>
+  </svg>
+
+  <!-- Sleep -->
+  <svg class="dog-svg" id="frame-sleep" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="58" cy="90" rx="38" ry="16" fill="#F5F0E8" stroke="#333" stroke-width="2">
+      <animate attributeName="ry" values="16;17;16" dur="2.5s" repeatCount="indefinite"/>
+    </ellipse>
+    <circle cx="88" cy="82" r="16" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M78 70 L76 56 L84 66" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M92 68 L95 54 L99 64" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M85 80 Q89 77 93 80" fill="none" stroke="#333" stroke-width="2"/>
+    <ellipse cx="102" cy="84" rx="3" ry="2.5" fill="#333"/>
+    <text x="100" y="66" font-size="11" fill="#6B9BD2" font-family="Arial" font-weight="bold" opacity="0.8">
+      z<animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+    </text>
+    <text x="108" y="56" font-size="13" fill="#6B9BD2" font-family="Arial" font-weight="bold" opacity="0.6">
+      z<animate attributeName="opacity" values="0.5;1;0.5" dur="2.5s" repeatCount="indefinite"/>
+    </text>
+    <text x="116" y="46" font-size="15" fill="#6B9BD2" font-family="Arial" font-weight="bold" opacity="0.4">
+      Z<animate attributeName="opacity" values="0.2;1;0.2" dur="3s" repeatCount="indefinite"/>
+    </text>
+    <path d="M38 100 Q35 108 42 108" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M72 100 Q75 108 68 108" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M24 85 Q16 78 20 72" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"/>
+  </svg>
+
+  <!-- Yawn -->
+  <svg class="dog-svg" id="frame-yawn" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="58" cy="72" rx="32" ry="20" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <circle cx="86" cy="48" r="18" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M74 34 L71 16 L82 30" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M92 32 L96 14 L101 28" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M89 44 Q92 42 95 44" fill="none" stroke="#333" stroke-width="2"/>
+    <ellipse cx="105" cy="56" rx="8" ry="10" fill="#FF8B8B" stroke="#333" stroke-width="1.5">
+      <animate attributeName="ry" values="4;10;10;4" dur="2s" repeatCount="1" fill="freeze"/>
+    </ellipse>
+    <ellipse cx="105" cy="60" rx="5" ry="4" fill="#FF6B6B"/>
+    <line x1="42" y1="87" x2="42" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="53" y1="87" x2="53" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="67" y1="87" x2="67" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="76" y1="87" x2="76" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <path d="M28 65 Q18 44 24 38" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"/>
+  </svg>
+
+  <!-- Stretch -->
+  <svg class="dog-svg" id="frame-stretch" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="55" cy="68" rx="34" ry="18" fill="#F5F0E8" stroke="#333" stroke-width="2" transform="rotate(-12, 55, 68)"/>
+    <circle cx="92" cy="56" r="17" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M80 42 L77 24 L88 38" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M98 40 L102 22 L107 36" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <circle cx="98" cy="53" r="2.5" fill="#333"/>
+    <ellipse cx="108" cy="58" rx="3.5" ry="2.5" fill="#333"/>
+    <path d="M108 61 Q104 67 101 64" fill="none" stroke="#333" stroke-width="1.5"/>
+    <line x1="60" y1="80" x2="72" y2="110" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="68" y1="78" x2="80" y2="108" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="35" y1="76" x2="35" y2="110" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="44" y1="78" x2="44" y2="110" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <path d="M24 62 Q14 42 20 36" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"/>
+  </svg>
+
+  <!-- Tilt head -->
+  <svg class="dog-svg" id="frame-tilt" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="58" cy="72" rx="32" ry="20" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <g transform="rotate(15, 86, 48)">
+      <circle cx="86" cy="48" r="18" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M74 34 L71 16 L82 30" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <path d="M92 32 L96 14 L101 28" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+      <circle cx="90" cy="45" r="3.5" fill="#333"/>
+      <circle cx="90" cy="43" r="1.2" fill="#fff"/>
+      <ellipse cx="102" cy="50" rx="3.5" ry="2.5" fill="#333"/>
+      <path d="M102 53 Q98 58 95 56" fill="none" stroke="#333" stroke-width="1.5"/>
+    </g>
+    <line x1="42" y1="87" x2="42" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="53" y1="87" x2="53" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="67" y1="87" x2="67" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="76" y1="87" x2="76" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <path d="M28 65 Q18 44 24 38" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round">
+      <animate attributeName="d" values="M28 65 Q18 44 24 38;M28 65 Q14 50 16 44;M28 65 Q18 44 24 38" dur="0.4s" repeatCount="indefinite"/>
+    </path>
+  </svg>
+
+  <!-- Beg -->
+  <svg class="dog-svg" id="frame-beg" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="60" cy="78" rx="28" ry="22" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <circle cx="78" cy="46" r="18" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M66 32 L63 14 L74 28" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M84 30 L88 12 L93 26" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <circle cx="84" cy="43" r="4" fill="#333"/>
+    <circle cx="84" cy="41" r="1.5" fill="#fff"/>
+    <circle cx="82" cy="44" r="0.8" fill="#fff"/>
+    <ellipse cx="94" cy="48" rx="3.5" ry="2.5" fill="#333"/>
+    <path d="M94 51 Q90 57 87 54" fill="none" stroke="#333" stroke-width="1.5"/>
+    <path d="M52 88 Q48 72 56 65" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round">
+      <animate attributeName="d" values="M52 88 Q48 72 56 65;M52 88 Q46 74 54 67;M52 88 Q48 72 56 65" dur="0.5s" repeatCount="indefinite"/>
+    </path>
+    <path d="M62 88 Q60 74 66 67" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round">
+      <animate attributeName="d" values="M62 88 Q60 74 66 67;M62 88 Q58 76 64 69;M62 88 Q60 74 66 67" dur="0.5s" repeatCount="indefinite" begin="0.15s"/>
+    </path>
+    <path d="M42 92 Q34 106 44 112" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <path d="M38 90 Q28 102 38 110" fill="none" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <path d="M34 72 Q22 55 28 46" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round">
+      <animate attributeName="d" values="M34 72 Q22 55 28 46;M34 72 Q16 58 14 50;M34 72 Q22 55 28 46" dur="0.25s" repeatCount="indefinite"/>
+    </path>
+  </svg>
+
+  <!-- Lonely -->
+  <svg class="dog-svg" id="frame-lonely" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="58" cy="92" rx="36" ry="14" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <circle cx="88" cy="84" r="16" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M78 72 L76 58 L84 68" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M92 70 L95 56 L99 66" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M84 82 Q87 80 90 83" fill="none" stroke="#333" stroke-width="2"/>
+    <ellipse cx="100" cy="86" rx="3" ry="2" fill="#333"/>
+    <line x1="68" y1="98" x2="82" y2="108" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="74" y1="100" x2="88" y2="110" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <path d="M38 98 Q35 106 42 106" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M24 87 Q18 82 20 76" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round"/>
+    <text x="96" y="68" font-size="16" fill="#aaa" font-family="Arial">
+      ...<animate attributeName="opacity" values="0.3;0.8;0.3" dur="3s" repeatCount="indefinite"/>
+    </text>
+  </svg>
+
+  <!-- Chase -->
+  <svg class="dog-svg" id="frame-chase" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="64" cy="75" rx="28" ry="20" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <circle cx="82" cy="55" r="16" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M72 42 L70 26 L78 38" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M88 40 L91 24 L95 36" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <circle cx="87" cy="52" r="3" fill="#333"/>
+    <circle cx="87" cy="50" r="1" fill="#fff"/>
+    <ellipse cx="96" cy="56" rx="3" ry="2.5" fill="#333"/>
+    <path d="M96 59 Q92 65 88 62" fill="none" stroke="#333" stroke-width="1.5"/>
+    <path d="M92 62 Q90 67 94 67 Q96 67 95 62" fill="#FF8B8B" stroke="#333" stroke-width="1"/>
+    <line x1="48" y1="88" x2="44" y2="110" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="58" y1="88" x2="54" y2="110" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="70" y1="88" x2="74" y2="110" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="78" y1="86" x2="82" y2="108" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <path d="M38 68 Q26 52 32 42 Q40 34 52 40" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round">
+      <animate attributeName="d" values="M38 68 Q26 52 32 42 Q40 34 52 40;M38 68 Q22 56 28 46 Q36 38 48 44;M38 68 Q26 52 32 42 Q40 34 52 40" dur="0.4s" repeatCount="indefinite"/>
+    </path>
+  </svg>
+
+  <!-- Jump -->
+  <svg class="dog-svg" id="frame-jump" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="58" cy="62" rx="32" ry="20" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <circle cx="86" cy="38" r="18" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M74 24 L71 6 L82 20" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M92 22 L96 4 L101 18" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M89 36 Q92 33 95 36" fill="none" stroke="#333" stroke-width="2.5"/>
+    <ellipse cx="102" cy="40" rx="3.5" ry="2.5" fill="#333"/>
+    <path d="M102 43 Q98 49 95 46" fill="none" stroke="#333" stroke-width="1.5"/>
+    <path d="M98 46 Q96 53 100 53 Q104 53 102 46" fill="#FF8B8B" stroke="#333" stroke-width="1"/>
+    <line x1="38" y1="76" x2="30" y2="96" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="50" y1="78" x2="58" y2="98" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="66" y1="78" x2="74" y2="98" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="76" y1="76" x2="84" y2="96" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <path d="M28 55 Q14 34 22 24" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round">
+      <animate attributeName="d" values="M28 55 Q14 34 22 24;M28 55 Q10 38 16 28;M28 55 Q14 34 22 24" dur="0.2s" repeatCount="indefinite"/>
+    </path>
+    <text x="108" y="26" font-size="10" fill="#FFD700">✦</text>
+    <text x="68" y="16" font-size="8" fill="#FFD700">✦</text>
+  </svg>
+
+  <!-- Typing frame 1: left paw down, right paw up -->
+  <svg class="dog-svg" id="frame-typing1" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+    <!-- Body -->
+    <ellipse cx="58" cy="72" rx="32" ry="20" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <!-- Head (slightly lowered, looking at keyboard) -->
+    <circle cx="86" cy="52" r="18" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <!-- Ears -->
+    <path d="M74 38 L71 20 L82 34" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M92 36 L96 18 L101 32" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <!-- Eyes (focused, looking down) -->
+    <circle cx="90" cy="50" r="2" fill="#333"/>
+    <circle cx="98" cy="50" r="2" fill="#333"/>
+    <!-- Nose & mouth -->
+    <ellipse cx="102" cy="54" rx="3.5" ry="2.5" fill="#333"/>
+    <path d="M102 57 Q98 62 95 59" fill="none" stroke="#333" stroke-width="1.5"/>
+    <!-- Back legs (stationary) -->
+    <line x1="42" y1="87" x2="42" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="53" y1="87" x2="53" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <!-- Front left paw DOWN (pressing) -->
+    <line x1="67" y1="87" x2="67" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <!-- Front right paw UP (lifted) -->
+    <line x1="76" y1="87" x2="78" y2="102" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <!-- Tail (happy wag) -->
+    <path d="M28 65 Q18 44 24 38" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round">
+      <animate attributeName="d" values="M28 65 Q18 44 24 38;M28 65 Q12 50 15 44;M28 65 Q18 44 24 38" dur="0.3s" repeatCount="indefinite"/>
+    </path>
+    <!-- Keyboard hint -->
+    <rect x="58" y="114" width="28" height="6" rx="2" fill="#DDD" stroke="#999" stroke-width="0.8" opacity="0.6"/>
+  </svg>
+
+  <!-- Typing frame 2: left paw up, right paw down -->
+  <svg class="dog-svg" id="frame-typing2" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+    <!-- Body -->
+    <ellipse cx="58" cy="72" rx="32" ry="20" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <!-- Head -->
+    <circle cx="86" cy="52" r="18" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <!-- Ears -->
+    <path d="M74 38 L71 20 L82 34" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M92 36 L96 18 L101 32" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <!-- Eyes -->
+    <circle cx="90" cy="50" r="2" fill="#333"/>
+    <circle cx="98" cy="50" r="2" fill="#333"/>
+    <!-- Nose & mouth -->
+    <ellipse cx="102" cy="54" rx="3.5" ry="2.5" fill="#333"/>
+    <path d="M102 57 Q98 62 95 59" fill="none" stroke="#333" stroke-width="1.5"/>
+    <!-- Back legs -->
+    <line x1="42" y1="87" x2="42" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="53" y1="87" x2="53" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <!-- Front left paw UP (lifted) -->
+    <line x1="67" y1="87" x2="65" y2="102" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <!-- Front right paw DOWN (pressing) -->
+    <line x1="76" y1="87" x2="76" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <!-- Tail -->
+    <path d="M28 65 Q18 44 24 38" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round">
+      <animate attributeName="d" values="M28 65 Q12 50 15 44;M28 65 Q18 44 24 38;M28 65 Q12 50 15 44" dur="0.3s" repeatCount="indefinite"/>
+    </path>
+    <!-- Keyboard hint -->
+    <rect x="58" y="114" width="28" height="6" rx="2" fill="#DDD" stroke="#999" stroke-width="0.8" opacity="0.6"/>
+  </svg>
+
+  <!-- Click: right paw reaching forward and pressing -->
+  <svg class="dog-svg" id="frame-click" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+    <!-- Body -->
+    <ellipse cx="58" cy="72" rx="32" ry="20" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <!-- Head (alert, looking at screen) -->
+    <circle cx="86" cy="48" r="18" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <!-- Ears (perked up) -->
+    <path d="M74 34 L71 14 L82 28" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <path d="M92 32 L96 12 L101 26" fill="#F5F0E8" stroke="#333" stroke-width="2"/>
+    <!-- Eyes (focused) -->
+    <circle cx="92" cy="45" r="2.5" fill="#333"/>
+    <ellipse cx="102" cy="50" rx="3.5" ry="2.5" fill="#333"/>
+    <!-- Nose & mouth -->
+    <path d="M102 53 Q98 59 95 56" fill="none" stroke="#333" stroke-width="1.5"/>
+    <!-- Back legs -->
+    <line x1="42" y1="87" x2="42" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <line x1="53" y1="87" x2="53" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <!-- Front left paw (normal) -->
+    <line x1="67" y1="87" x2="67" y2="112" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <!-- Front right paw EXTENDED forward (clicking mouse) -->
+    <line x1="76" y1="87" x2="88" y2="108" stroke="#333" stroke-width="3" stroke-linecap="round"/>
+    <!-- Mouse shape under paw -->
+    <ellipse cx="90" cy="112" rx="6" ry="4" fill="#DDD" stroke="#999" stroke-width="0.8" opacity="0.6"/>
+    <!-- Click effect -->
+    <circle cx="90" cy="108" r="3" fill="none" stroke="#FF6B6B" stroke-width="1" opacity="0.8">
+      <animate attributeName="r" values="2;5;2" dur="0.3s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.8;0.2;0.8" dur="0.3s" repeatCount="indefinite"/>
+    </circle>
+    <!-- Tail -->
+    <path d="M28 65 Q18 44 24 38" fill="none" stroke="#333" stroke-width="2.5" stroke-linecap="round">
+      <animate attributeName="d" values="M28 65 Q18 44 24 38;M28 65 Q15 50 18 44;M28 65 Q18 44 24 38" dur="0.6s" repeatCount="indefinite"/>
+    </path>
+  </svg>
+</div>
+
+<script src="breeds.js"></script>
+<script src="../node_modules/peerjs/dist/peerjs.min.js"></script>
+<script src="network.js"></script>
+<script>
+// === Pet mode detection ===
+let petMode = 'default'; // 'default' | 'breed' | 'custom'
+let currentBreed = null;
+let currentAccessories = {};
+let breedAnimFrame = null;
+let isCustomPet = false;
+
+const breedCanvas = document.getElementById('breed-pet-canvas');
+const breedCtx = breedCanvas.getContext('2d');
+
+async function checkPetMode() {
+  const petInfo = await window.petAPI.getActivePet();
+  if (petInfo.accessories) currentAccessories = petInfo.accessories;
+
+  if (petInfo.type === 'custom' && petInfo.data && petInfo.data.imageDataUrl) {
+    petMode = 'custom';
+    isCustomPet = true;
+    showCustomPet(petInfo.data);
+  } else if (petInfo.type === 'breed' && petInfo.breedId) {
+    petMode = 'breed';
+    isCustomPet = false;
+    currentBreed = getBreedById(petInfo.breedId);
+    if (currentBreed) {
+      showBreedPet();
+    } else {
+      // Fallback to default
+      petMode = 'default';
+      showDefaultPet();
+    }
+  } else {
+    petMode = 'default';
+    isCustomPet = false;
+    showDefaultPet();
+  }
+}
+
+function showDefaultPet() {
+  document.getElementById('pet').style.display = 'block';
+  document.getElementById('custom-pet-container').style.display = 'none';
+  breedCanvas.style.display = 'none';
+  if (breedAnimFrame) { cancelAnimationFrame(breedAnimFrame); breedAnimFrame = null; }
+}
+
+function showCustomPet(data) {
+  document.getElementById('pet').style.display = 'none';
+  document.getElementById('custom-pet-container').style.display = 'block';
+  breedCanvas.style.display = 'none';
+  if (breedAnimFrame) { cancelAnimationFrame(breedAnimFrame); breedAnimFrame = null; }
+  document.getElementById('custom-pet-img').src = data.imageDataUrl;
+}
+
+function showBreedPet() {
+  document.getElementById('pet').style.display = 'none';
+  document.getElementById('custom-pet-container').style.display = 'none';
+  breedCanvas.style.display = 'block';
+  startBreedAnimation();
+}
+
+// === Breed Canvas Animation ===
+function startBreedAnimation() {
+  if (breedAnimFrame) cancelAnimationFrame(breedAnimFrame);
+
+  function animate() {
+    if (petMode !== 'breed' || !currentBreed) return;
+    const t = Date.now() / 1000;
+
+    breedCtx.save();
+    if (direction === -1) {
+      breedCtx.translate(200, 0);
+      breedCtx.scale(-1, 1);
+    }
+    renderPet(breedCtx, currentBreed, currentState, t, 200, currentAccessories, direction);
+    breedCtx.restore();
+
+    breedAnimFrame = requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+// Listen for config changes
+window.petAPI.onConfigChanged(async () => {
+  await checkPetMode();
+  if (petMode === 'default') {
+    setState('stand');
+    startAutoBehavior();
+  } else if (petMode === 'breed') {
+    startAutoBehavior();
+  }
+});
+
+// ========================
+// Default dog SVG animation system (kept intact)
+// ========================
+
+const frames = {
+  stand:   { ids: ['frame-stand'],          speed: 0,   canBreath: true  },
+  walk:    { ids: ['frame-walk1', 'frame-walk2'], speed: 180, canBreath: false },
+  sit:     { ids: ['frame-sit'],            speed: 0,   canBreath: true  },
+  sleep:   { ids: ['frame-sleep'],          speed: 0,   canBreath: false },
+  yawn:    { ids: ['frame-yawn'],           speed: 0,   canBreath: false, duration: 2500 },
+  stretch: { ids: ['frame-stretch'],        speed: 0,   canBreath: false, duration: 2000 },
+  tilt:    { ids: ['frame-tilt'],           speed: 0,   canBreath: true,  duration: 2500 },
+  beg:     { ids: ['frame-beg'],            speed: 0,   canBreath: false, duration: 4000 },
+  lonely:  { ids: ['frame-lonely'],         speed: 0,   canBreath: false },
+  poop:    { ids: ['frame-stand'],          speed: 0,   canBreath: false, duration: 5000 },
+  chase:   { ids: ['frame-chase'],          speed: 0,   canBreath: false, duration: 3000, spin: true },
+  jump:    { ids: ['frame-jump'],           speed: 0,   canBreath: false, duration: 2000, bounce: true },
+  typing:  { ids: ['frame-typing1', 'frame-typing2'], speed: 120, canBreath: false },
+  click:   { ids: ['frame-click'],          speed: 0,   canBreath: false },
+};
+
+let currentState = 'stand';
+let previousState = 'stand';
+let frameIndex = 0;
+let animTimer = null;
+let moveTimer = null;
+let direction = 1;
+let isDragging = false;
+let lastInteraction = Date.now();
+
+const pet = document.getElementById('pet');
+const emotionEl = document.getElementById('emotion');
+
+function showEmotion(emoji, duration = 2000) {
+  emotionEl.textContent = emoji;
+  emotionEl.classList.add('show');
+  setTimeout(() => emotionEl.classList.remove('show'), duration);
+}
+
+function showTip(text, duration = 3000) {
+  const tip = document.getElementById('tip-banner');
+  tip.textContent = text;
+  tip.classList.add('show');
+  setTimeout(() => tip.classList.remove('show'), duration);
+}
+
+function showFrame(id) {
+  document.querySelectorAll('.dog-svg').forEach(el => {
+    el.classList.remove('active', 'breathing', 'bouncing', 'spinning', 'flipped');
+  });
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('active');
+  if (direction === -1) el.classList.add('flipped');
+  const state = frames[currentState];
+  if (state.canBreath) el.classList.add('breathing');
+  if (state.bounce) el.classList.add('bouncing');
+  if (state.spin) el.classList.add('spinning');
+}
+
+function startAnimation() {
+  if (animTimer) clearInterval(animTimer);
+  if (petMode !== 'default') return; // Skip SVG animation for breed/custom
+  const state = frames[currentState];
+  if (!state) return;
+  frameIndex = 0;
+  showFrame(state.ids[0]);
+  if (state.ids.length > 1 && state.speed > 0) {
+    animTimer = setInterval(() => {
+      frameIndex = (frameIndex + 1) % state.ids.length;
+      showFrame(state.ids[frameIndex]);
+    }, state.speed);
+  }
+}
+
+// Walking
+async function startWalking() {
+  stopWalking();
+  if (currentState !== 'walk') return;
+  moveTimer = setInterval(async () => {
+    if (isDragging) return;
+    try {
+      const { window: bounds, screen: screenSize } = await window.petAPI.getBounds();
+      let newX = bounds.x + direction * 2;
+      if (newX <= 0) direction = 1;
+      if (newX >= screenSize.width - 200) direction = -1;
+      newX = bounds.x + direction * 2;
+      window.petAPI.setPosition(newX, bounds.y);
+    } catch(e) {}
+  }, 50);
+}
+
+function stopWalking() {
+  if (moveTimer) { clearInterval(moveTimer); moveTimer = null; }
+}
+
+// State machine
+function setState(name, afterState) {
+  if (!frames[name]) return;
+  previousState = currentState;
+  currentState = name;
+
+  if (petMode === 'default') {
+    startAnimation();
+  }
+  // For breed pets, currentState is read by the animation loop
+
+  if (name === 'walk') startWalking();
+  else stopWalking();
+
+  const state = frames[name];
+  if (state.duration) {
+    setTimeout(() => {
+      if (currentState === name) setState(afterState || 'stand');
+    }, state.duration);
+  }
+}
+
+// === Input Mirror System ===
+// Mirrors user keyboard/mouse input as pet animations
+let inputMirrorTimer = null;
+let isInputMirroring = false;
+const INPUT_IDLE_TIMEOUT = 1500; // 1.5s to return to idle
+
+function onInputEvent(type) {
+  // Don't interrupt certain states
+  if (['sleep', 'poop', 'beg', 'lonely'].includes(currentState)) return;
+
+  lastInteraction = Date.now();
+
+  if (type === 'keydown') {
+    if (currentState !== 'typing') {
+      isInputMirroring = true;
+      setState('typing');
+    }
+  } else if (type === 'mousedown') {
+    if (currentState !== 'click') {
+      isInputMirroring = true;
+      setState('click');
+    }
+  }
+
+  // Reset idle timer
+  if (inputMirrorTimer) clearTimeout(inputMirrorTimer);
+  inputMirrorTimer = setTimeout(() => {
+    if (isInputMirroring && (currentState === 'typing' || currentState === 'click')) {
+      isInputMirroring = false;
+      setState('stand');
+    }
+  }, INPUT_IDLE_TIMEOUT);
+}
+
+// Listen for input events from main process via preload
+if (window.petAPI.onInputEvent) {
+  window.petAPI.onInputEvent((type) => onInputEvent(type));
+}
+
+// Life-like behavior engine
+const behaviors = [
+  { name: 'walk', weight: 25, emotion: null },
+  { name: 'stand', weight: 20, emotion: null },
+  { name: 'sit', weight: 15, emotion: null },
+  { name: 'yawn', weight: 8, emotion: '😪', after: 'sleep' },
+  { name: 'stretch', weight: 8, emotion: '🐾', after: 'stand' },
+  { name: 'tilt', weight: 6, emotion: '❓', after: 'stand' },
+  { name: 'chase', weight: 5, emotion: '🌀', after: 'sit' },
+  { name: 'jump', weight: 5, emotion: '⭐', after: 'stand' },
+  { name: 'beg', weight: 4, emotion: '🥺', after: 'sit' },
+];
+
+function pickRandomBehavior() {
+  const totalWeight = behaviors.reduce((sum, b) => sum + b.weight, 0);
+  let r = Math.random() * totalWeight;
+  for (const b of behaviors) { r -= b.weight; if (r <= 0) return b; }
+  return behaviors[0];
+}
+
+let autoTimer = null;
+function startAutoBehavior() {
+  if (autoTimer) clearInterval(autoTimer);
+  function doNext() {
+    if (isDragging) return;
+    if (Date.now() - lastInteraction > 60000 && currentState !== 'lonely' && currentState !== 'sleep') {
+      setState('lonely');
+      showEmotion('💭', 3000);
+      autoTimer = setTimeout(doNext, 8000 + Math.random() * 5000);
+      return;
+    }
+    const behavior = pickRandomBehavior();
+    direction = Math.random() > 0.5 ? 1 : -1;
+    setState(behavior.name, behavior.after);
+    if (behavior.emotion) showEmotion(behavior.emotion);
+    autoTimer = setTimeout(doNext, 4000 + Math.random() * 8000);
+  }
+  autoTimer = setTimeout(doNext, 3000);
+}
+
+// === Drag (works for all modes) ===
+let dragStart = { x: 0, y: 0 };
+
+function startDrag(e) {
+  isDragging = true;
+  dragStart.x = e.screenX;
+  dragStart.y = e.screenY;
+  lastInteraction = Date.now();
+}
+
+function handleDrag(e) {
+  if (!isDragging) return;
+  const dx = e.screenX - dragStart.x;
+  const dy = e.screenY - dragStart.y;
+  window.petAPI.moveWindow(dx, dy);
+  dragStart.x = e.screenX;
+  dragStart.y = e.screenY;
+}
+
+function endDrag() {
+  if (isDragging) {
+    isDragging = false;
+    setState('tilt', 'stand');
+    showEmotion('😳');
+    setTimeout(() => showEmotion('💕'), 1500);
+  }
+}
+
+pet.addEventListener('mousedown', startDrag);
+breedCanvas.addEventListener('mousedown', startDrag);
+document.getElementById('custom-pet-container').addEventListener('mousedown', startDrag);
+document.addEventListener('mousemove', handleDrag);
+document.addEventListener('mouseup', endDrag);
+
+// Click
+function handleClick() {
+  lastInteraction = Date.now();
+  if (currentState === 'lonely') { setState('jump', 'stand'); showEmotion('💕'); return; }
+  if (currentState === 'sleep') { setState('yawn', 'stand'); showEmotion('😪'); return; }
+  if (petMode === 'custom' || petMode === 'breed') {
+    const emojis = ['❤️', '💕', '🥰', '✨', '🌟', '😊'];
+    showEmotion(emojis[Math.floor(Math.random() * emojis.length)], 1500);
+  }
+}
+
+pet.addEventListener('click', handleClick);
+breedCanvas.addEventListener('click', handleClick);
+document.getElementById('custom-pet-container').addEventListener('click', handleClick);
+
+// Double click → mini menu
+function handleDblClick() {
+  lastInteraction = Date.now();
+  toggleChat();
+}
+
+pet.addEventListener('dblclick', handleDblClick);
+breedCanvas.addEventListener('dblclick', handleDblClick);
+document.getElementById('custom-pet-container').addEventListener('dblclick', handleDblClick);
+
+// Hover
+function handleHover() {
+  lastInteraction = Date.now();
+  if (currentState === 'stand' || currentState === 'sit') showEmotion('❤️', 1500);
+}
+pet.addEventListener('mouseenter', handleHover);
+breedCanvas.addEventListener('mouseenter', handleHover);
+
+// Tray menu
+window.petAPI.onAction((action) => {
+  lastInteraction = Date.now();
+  if (action === 'random') { startAutoBehavior(); showEmotion('🎲'); }
+  else if (action === 'poop') {
+    setState('poop');
+    showEmotion('😣', 2000);
+    setTimeout(() => showTip('🐾 文明养犬，随手清理！'), 2500);
+  }
+  else setState(action);
+});
+
+// === Mini menu ===
+const miniMenu = document.getElementById('mini-menu');
+let menuTimeout = null;
+
+function showMiniMenu() {
+  miniMenu.classList.add('show');
+  if (menuTimeout) clearTimeout(menuTimeout);
+  menuTimeout = setTimeout(() => miniMenu.classList.remove('show'), 4000);
+}
+
+// Click anywhere to dismiss mini menu
+document.addEventListener('click', (e) => {
+  if (miniMenu.classList.contains('show') && !miniMenu.contains(e.target)) {
+    miniMenu.classList.remove('show');
+  }
+});
+
+function menuAction(action) {
+  miniMenu.classList.remove('show');
+  if (action === 'quit') {
+    showEmotion('👋', 1500);
+    setState('sit');
+    setTimeout(() => {
+      showEmotion('😢', 1000);
+      setTimeout(() => { window.petAPI.quitApp(); }, 1000);
+    }, 800);
+  } else if (action === 'room') {
+    openRoomPanel();
+  } else if (action === 'settings') {
+    window.petAPI.openSettings();
+  } else {
+    setState(action, 'stand');
+    if (action === 'beg') showEmotion('🥺');
+    if (action === 'jump') showEmotion('⭐');
+  }
+}
+
+// === Speech bubble ===
+function showSpeech(text, duration) {
+  // Auto duration: ~80ms per character, min 3s, max 15s
+  if (!duration) duration = Math.max(3000, Math.min(text.length * 80, 15000));
+  const bubble = document.getElementById('speech-bubble');
+  bubble.textContent = text;
+  bubble.classList.add('show');
+  setTimeout(() => bubble.classList.remove('show'), duration);
+}
+
+// === Proactive Interaction System ===
+const greetings = {
+  morning: ['☀️ 早上好呀~', '🌅 新的一天开始啦!', '🥣 吃早餐了吗?'],
+  noon:    ['🍱 该吃午饭啦~', '😋 中午要吃好哦!', '🥤 记得喝水~'],
+  afternoon: ['☕ 下午茶时间~', '🍪 要不要休息一下?', '💪 下午也要加油!'],
+  evening: ['🌙 晚上好~', '🍜 晚饭吃了吗?', '✨ 辛苦一天啦!'],
+  night:   ['😴 该休息啦~', '🌛 别熬夜哦~', '💤 早点睡觉!'],
+};
+
+const randomChats = [
+  '🐾 摸摸我嘛~', '💕 我喜欢你!', '🦴 有零食吗?',
+  '🎵 哼哼~', '👀 你在干嘛?', '🌈 今天开心吗?',
+  '😊 嘿嘿~', '🐶 汪!', '💭 在想你~',
+  '🎮 一起玩嘛~', '📱 别光看手机啦~', '🍃 好无聊啊~',
+  '✨ 你最棒啦!', '🤗 抱抱~', '⭐ 要加油哦!',
+  '🎈 陪陪我嘛~', '😽 喵~', '🐾 踩踩踩~',
+];
+
+const healthTips = [
+  '💧 记得喝杯水哦~', '👁️ 看看远处休息下眼睛~',
+  '🧘 站起来伸伸懒腰吧~', '🚶 起来走动走动~',
+  '😌 深呼吸放松一下~', '🖥️ 屏幕调暗一点哦~',
+];
+
+function getTimeGreeting() {
+  const h = new Date().getHours();
+  if (h >= 6 && h < 9) return greetings.morning;
+  if (h >= 11 && h < 13) return greetings.noon;
+  if (h >= 14 && h < 17) return greetings.afternoon;
+  if (h >= 17 && h < 21) return greetings.evening;
+  if (h >= 22 || h < 6) return greetings.night;
+  return null;
+}
+
+let lastGreetingHour = -1;
+let lastProactiveTime = Date.now();
+
+function proactiveInteraction() {
+  if (isDragging || currentState === 'sleep') return;
+
+  const now = Date.now();
+  const idleTime = now - lastInteraction;
+  const h = new Date().getHours();
+
+  // Time-based greeting (once per hour slot)
+  const greetingList = getTimeGreeting();
+  if (greetingList && h !== lastGreetingHour) {
+    lastGreetingHour = h;
+    const msg = greetingList[Math.floor(Math.random() * greetingList.length)];
+    showSpeech(msg, 4000);
+    setState('tilt', 'stand');
+    showEmotion('👋', 2000);
+    lastProactiveTime = now;
+    return;
+  }
+
+  // Idle > 2 min: pet comes to poke user
+  if (idleTime > 120000 && currentState !== 'lonely') {
+    const roll = Math.random();
+    if (roll < 0.35) {
+      // Nudge: walk towards center + speak
+      const chat = randomChats[Math.floor(Math.random() * randomChats.length)];
+      setState('walk');
+      showSpeech(chat, 3500);
+      setTimeout(() => { if (currentState === 'walk') setState('beg', 'stand'); }, 2000);
+    } else if (roll < 0.6) {
+      // Health reminder
+      const tip = healthTips[Math.floor(Math.random() * healthTips.length)];
+      setState('tilt', 'stand');
+      showSpeech(tip, 4000);
+    } else if (roll < 0.8) {
+      // Attention seeking
+      setState('jump', 'stand');
+      showSpeech('🎈 注意我嘛~', 2500);
+      showEmotion('⭐', 2000);
+    } else {
+      // Poop randomly (rare but fun)
+      setState('poop');
+      showEmotion('😣', 2000);
+      setTimeout(() => showTip('🐾 文明养犬，随手清理！'), 2500);
+    }
+    lastProactiveTime = now;
+    return;
+  }
+
+  // Random chat (lower frequency when user is active)
+  if (now - lastProactiveTime > 45000 && idleTime > 15000 && Math.random() < 0.3) {
+    const chat = randomChats[Math.floor(Math.random() * randomChats.length)];
+    showSpeech(chat, 3000);
+    // Small accompanying action
+    if (Math.random() < 0.4) {
+      setState('tilt', 'stand');
+    }
+    lastProactiveTime = now;
+  }
+}
+
+// === Chat System ===
+const chatInput = document.getElementById('chat-input');
+const chatWrap = document.getElementById('chat-input-wrap');
+let chatVisible = false;
+
+function toggleChat() {
+  chatVisible = !chatVisible;
+  chatWrap.classList.toggle('show', chatVisible);
+  if (chatVisible) chatInput.focus();
+}
+
+// Right-click to show mini menu
+document.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  showMiniMenu();
+});
+
+const chatRules = [
+  { match: /你好|嗨|hi|hello|hey/i, replies: ['你好呀~ 🐾', '嗨嗨！今天也要开心哦~', '汪！你好！💕'] },
+  { match: /名字|叫什么|who are you/i, replies: ['我是你的桌面小宠物呀~', '我叫小毛球！🐶', '我是最可爱的桌面精灵！✨'] },
+  { match: /好看|漂亮|可爱|cute/i, replies: ['嘿嘿谢谢~ 你也超可爱！', '害羞了啦~ 😊', '你才是最好看的！💕'] },
+  { match: /累|困|tired|sleepy/i, replies: ['要不要休息一下呀？😴', '趴会儿吧，我陪你~', '别硬撑哦，健康第一！💤'] },
+  { match: /无聊|bored/i, replies: ['那我给你表演一个！⭐', '来玩嘛来玩嘛！🎮', '看我蹦蹦跳！'] },
+  { match: /吃|饿|hungry|eat|饭/i, replies: ['该吃饭啦！🍱', '我也饿了，有骨头吗？🦴', '好想吃零食~ 😋'] },
+  { match: /谢谢|感谢|thanks|thank/i, replies: ['不客气~ 汪！', '能帮到你我超开心的！💕', '嘿嘿~随时找我！'] },
+  { match: /笨|坏|讨厌|ugly|bad/i, replies: ['呜…你不喜欢我了吗…🥺', '我会更努力的！😢', '别这样嘛…我很乖的…'] },
+  { match: /爱|love|喜欢/i, replies: ['我也爱你！💕💕💕', '最喜欢你啦~ 汪！', '❤️ 幸福感爆棚！'] },
+  { match: /电脑|cpu|内存|电池|battery|memory/i, replies: ['我帮你看看！🔍'], action: 'syscheck' },
+  { match: /天气|weather/i, replies: ['我只能看到你的桌面啦~ 你帮我看看外面？🌤️', '要是能出去遛弯就好了~ 🐕'] },
+  { match: /工作|上班|work|coding|代码/i, replies: ['加油加油！你是最棒的！💪', '记得摸鱼…不是，记得休息！😏', '我帮你看着老板！👀'] },
+  { match: /再见|拜拜|bye/i, replies: ['拜拜~我还在这里等你哦~👋', '不要走太久啦~ 🥺', '回来要摸摸我哦！'] },
+  { match: /拉屎|便便|poop|粑粑/i, replies: ['哎呀…要文明养犬哦！😳'], action: 'poop' },
+];
+
+const defaultReplies = [
+  '汪汪？🐶', '嗯嗯，然后呢~', '听不太懂，但你说的都对！😊',
+  '摸摸头~', '你说得好有道理！', '汪~ 💕',
+  '我在认真听哦！👂', '好的好的~', '嘿嘿，继续说呀~',
+];
+
+let useAI = false; // Will be set true if API key exists
+
+async function petReply(userMsg) {
+  const msg = userMsg.trim();
+  if (!msg) return;
+
+  // Try Claude AI first
+  if (useAI) {
+    showSpeech('🤔 思考中...', 10000);
+    setState('tilt', 'stand');
+    showEmotion('💭', 2000);
+
+    const result = await window.petAPI.claudeChat(msg);
+    if (result && !result.error) {
+      showSpeech(result.text, 5000);
+      showEmotion('💬', 2000);
+      // React based on content
+      if (result.text.includes('打开') || result.text.includes('执行') || result.text.includes('完成')) {
+        setState('jump', 'stand');
+      }
+      return;
+    }
+    if (result && result.error === 'no_key') {
+      useAI = false; // Fallback to local
+    } else if (result && result.text) {
+      showSpeech(result.text, 4000);
+      return;
+    }
+  }
+
+  // Local fallback
+  for (const rule of chatRules) {
+    if (rule.match.test(msg)) {
+      const reply = rule.replies[Math.floor(Math.random() * rule.replies.length)];
+      showSpeech(reply, 3500);
+      setState('tilt', 'stand');
+      showEmotion('💬', 1500);
+      if (rule.action === 'syscheck') setTimeout(reportSystemStatus, 1500);
+      else if (rule.action === 'poop') {
+        setTimeout(() => { setState('poop'); showEmotion('😣', 2000); setTimeout(() => showTip('🐾 文明养犬，随手清理！'), 2500); }, 1500);
+      }
+      return;
+    }
+  }
+  const reply = defaultReplies[Math.floor(Math.random() * defaultReplies.length)];
+  showSpeech(reply, 3000);
+  if (Math.random() < 0.5) setState('tilt', 'stand');
+  showEmotion('💬', 1500);
+}
+
+// Check if Claude AI is available on startup
+async function checkAI() {
+  const result = await window.petAPI.claudeChat('ping');
+  if (result && !result.error) {
+    useAI = true;
+    window.petAPI.claudeClearHistory(); // Clear the ping
+  } else if (result && result.error === 'no_key') {
+    useAI = false;
+  } else {
+    useAI = true; // Key exists but maybe network issue
+    window.petAPI.claudeClearHistory();
+  }
+}
+checkAI();
+
+chatInput.addEventListener('keydown', async (e) => {
+  if (e.key === 'Enter') {
+    const msg = chatInput.value;
+    chatInput.value = '';
+    lastInteraction = Date.now();
+    chatWrap.classList.remove('show');
+    chatVisible = false;
+    await petReply(msg);
+  } else if (e.key === 'Escape') {
+    chatWrap.classList.remove('show');
+    chatVisible = false;
+  }
+});
+
+// === System Monitoring ===
+async function getSystemInfo() {
+  try { return await window.petAPI.getSystemInfo(); } catch(e) { return null; }
+}
+
+async function reportSystemStatus() {
+  const info = await getSystemInfo();
+  if (!info) { showSpeech('看不到系统信息呢~', 2500); return; }
+
+  const lines = [];
+  lines.push(`💻 CPU ${info.cpuUsage}% | 内存 ${info.memUsage}%`);
+  if (info.battery) {
+    lines.push(`🔋 电量 ${info.battery.percent}%${info.battery.charging ? ' ⚡充电中' : ''}`);
+  }
+  lines.push(`⏱️ 已开机 ${info.uptime}小时`);
+  if (info.activeApp) lines.push(`📱 ${info.activeApp}`);
+  showSpeech(lines.join(' | '), 5000);
+}
+
+// Periodic system check — pet reacts to system state
+let lastSysReaction = 0;
+async function systemReaction() {
+  if (Date.now() - lastSysReaction < 300000) return; // max once per 5 min
+  const info = await getSystemInfo();
+  if (!info) return;
+
+  if (info.battery && !info.battery.charging && info.battery.percent <= 15) {
+    showSpeech('🪫 电量好低！快充电呀！', 4000);
+    setState('beg', 'stand');
+    showEmotion('😰', 2000);
+    lastSysReaction = Date.now();
+  } else if (info.cpuUsage > 85) {
+    showSpeech('🔥 CPU好烫…电脑在努力呢！', 4000);
+    setState('stretch', 'stand');
+    showEmotion('💦', 2000);
+    lastSysReaction = Date.now();
+  } else if (info.memUsage > 90) {
+    showSpeech('😵 内存快满了！关掉些程序吧~', 4000);
+    setState('tilt', 'stand');
+    showEmotion('⚠️', 2000);
+    lastSysReaction = Date.now();
+  } else if (info.uptime > 8) {
+    showSpeech('🖥️ 开机超过' + info.uptime + '小时了，要不要重启一下？', 4000);
+    lastSysReaction = Date.now();
+  }
+}
+
+// Run proactive check every 20 seconds
+setInterval(proactiveInteraction, 20000);
+// System reaction check every 60 seconds
+setInterval(systemReaction, 60000);
+// First greeting on startup (after 3s)
+setTimeout(() => {
+  const h = new Date().getHours();
+  const list = getTimeGreeting();
+  if (list) {
+    lastGreetingHour = h;
+    showSpeech(list[Math.floor(Math.random() * list.length)], 4000);
+    showEmotion('👋', 2000);
+  } else {
+    showSpeech('🐾 我来啦~', 3000);
+    showEmotion('💕', 2000);
+  }
+}, 3000);
+
+// === Multiplayer Room System ===
+const roomPanel = document.getElementById('room-panel');
+const roomNicknameInput = document.getElementById('room-nickname');
+const roomCodeInput = document.getElementById('room-code-input');
+const roomCodeDisplay = document.getElementById('room-code-display');
+const roomCodeText = document.getElementById('room-code-text');
+const memberListEl = document.getElementById('member-list');
+const remoteCanvas = document.getElementById('remote-pet-canvas');
+const remoteCtx = remoteCanvas.getContext('2d');
+
+let remotePeers = {}; // { peerId: { data, lastUpdate } }
+let stateSyncInterval = null;
+let remoteRenderFrame = null;
+
+function openRoomPanel() {
+  // Default nickname to breed name or pet type
+  if (!roomNicknameInput.value) {
+    if (currentBreed && currentBreed.name) {
+      roomNicknameInput.value = currentBreed.name;
+    } else if (petMode === 'custom') {
+      roomNicknameInput.value = '自定义宠物';
+    } else {
+      roomNicknameInput.value = '小狗狗';
+    }
+  }
+  // Force display block first then animate
+  roomPanel.style.display = 'block';
+  requestAnimationFrame(() => roomPanel.classList.add('show'));
+}
+
+function closeRoomPanel() {
+  roomPanel.classList.remove('show');
+  setTimeout(() => { roomPanel.style.display = 'none'; }, 300);
+}
+
+async function doCreateRoom() {
+  const nickname = roomNicknameInput.value.trim() || '小宠物';
+  if (typeof PetNetwork === 'undefined') {
+    showSpeech('联机模块未加载~', 3000);
+    return;
+  }
+  try {
+    const code = await PetNetwork.createRoom(nickname);
+    showConnectedUI(code);
+    startStateSync();
+    showSpeech('🎉 房间创建成功！', 3000);
+    showEmotion('✨', 2000);
+  } catch (e) {
+    showSpeech('创建失败: ' + (e.message || e), 3000);
+  }
+}
+
+async function doJoinRoom() {
+  const nickname = roomNicknameInput.value.trim() || '小宠物';
+  const code = roomCodeInput.value.trim();
+  if (!code || code.length < 4) {
+    showSpeech('请输入正确的房间号~', 2500);
+    return;
+  }
+  if (typeof PetNetwork === 'undefined') {
+    showSpeech('联机模块未加载~', 3000);
+    return;
+  }
+  try {
+    await PetNetwork.joinRoom(code, nickname);
+    showConnectedUI(code);
+    startStateSync();
+    showSpeech('🎉 加入房间成功！', 3000);
+    showEmotion('💕', 2000);
+  } catch (e) {
+    showSpeech('加入失败: ' + (e.message || e), 3000);
+  }
+}
+
+function showConnectedUI(code) {
+  document.querySelector('.room-join-controls').style.display = 'none';
+  document.querySelector('.room-connected-info').style.display = 'block';
+  roomCodeDisplay.style.display = 'block';
+  roomCodeText.textContent = code;
+}
+
+function showDisconnectedUI() {
+  document.querySelector('.room-join-controls').style.display = '';
+  document.querySelector('.room-connected-info').style.display = 'none';
+  roomCodeDisplay.style.display = 'none';
+  roomCodeInput.value = '';
+  memberListEl.innerHTML = '';
+}
+
+function copyRoomCode() {
+  const code = roomCodeText.textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(code).then(() => {
+      showSpeech('📋 已复制房间号!', 2000);
+    });
+  } else {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = code;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showSpeech('📋 已复制房间号!', 2000);
+  }
+}
+
+function doLeaveRoom() {
+  if (typeof PetNetwork !== 'undefined') {
+    PetNetwork.leaveRoom();
+  }
+  stopStateSync();
+  remotePeers = {};
+  remoteCtx.clearRect(0, 0, remoteCanvas.width, remoteCanvas.height);
+  showDisconnectedUI();
+  showSpeech('👋 已离开房间', 2500);
+}
+
+// State sync: send local pet state every 200ms
+function startStateSync() {
+  stopStateSync();
+  stateSyncInterval = setInterval(() => {
+    if (typeof PetNetwork === 'undefined' || !PetNetwork.isConnected()) return;
+    const stateData = {
+      nickname: roomNicknameInput.value.trim() || '小宠物',
+      breedId: currentBreed ? currentBreed.id : 'default-dog',
+      breed: currentBreed,
+      state: currentState,
+      t: Date.now() / 1000,
+      accessories: currentAccessories,
+      dir: direction
+    };
+    PetNetwork.sendPetState(stateData);
+  }, 200);
+
+  // Start rendering remote pets
+  startRemoteRender();
+}
+
+function stopStateSync() {
+  if (stateSyncInterval) { clearInterval(stateSyncInterval); stateSyncInterval = null; }
+  if (remoteRenderFrame) { cancelAnimationFrame(remoteRenderFrame); remoteRenderFrame = null; }
+}
+
+// Receive remote peer states
+function setupNetworkCallbacks() {
+  if (typeof PetNetwork === 'undefined') return;
+
+  PetNetwork.onPeerState(function(peerId, data) {
+    remotePeers[peerId] = { data: data, lastUpdate: Date.now() };
+  });
+
+  PetNetwork.onMemberUpdate(function(members) {
+    memberListEl.innerHTML = '';
+    members.forEach(function(m) {
+      const item = document.createElement('div');
+      item.className = 'member-item';
+      const isOnline = m.status === 'connected' || m.status === 'online' || m.status === '在线';
+      item.innerHTML =
+        '<span class="member-name">' + escapeHtml(m.name || '???') + '</span>' +
+        '<span class="member-status ' + (isOnline ? 'online' : 'offline') + '">' +
+        (isOnline ? '在线' : '离开') + '</span>';
+      memberListEl.appendChild(item);
+    });
+  });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// Render remote pets on overlay canvas
+function startRemoteRender() {
+  if (remoteRenderFrame) cancelAnimationFrame(remoteRenderFrame);
+
+  function renderRemote() {
+    remoteCtx.clearRect(0, 0, remoteCanvas.width, remoteCanvas.height);
+    const now = Date.now();
+    const peerIds = Object.keys(remotePeers);
+    let activePeers = 0;
+
+    for (let i = 0; i < peerIds.length; i++) {
+      const peer = remotePeers[peerIds[i]];
+      // Remove stale peers (no update for 5s)
+      if (now - peer.lastUpdate > 5000) {
+        delete remotePeers[peerIds[i]];
+        continue;
+      }
+
+      const d = peer.data;
+      if (!d) continue;
+      activePeers++;
+
+      remoteCtx.save();
+      remoteCtx.globalAlpha = 0.85;
+
+      // Offset each remote pet slightly so they don't fully overlap
+      const offsetX = (activePeers % 3) * 15 - 15;
+      const offsetY = (activePeers % 2) * 10;
+      remoteCtx.translate(offsetX, offsetY);
+
+      // Render the remote pet
+      if (d.breed && typeof renderPet === 'function') {
+        const t = d.t || (Date.now() / 1000);
+        const dir = d.dir || 1;
+        if (dir === -1) {
+          remoteCtx.translate(200, 0);
+          remoteCtx.scale(-1, 1);
+        }
+        renderPet(remoteCtx, d.breed, d.state || 'stand', t, 180, d.accessories || {}, dir);
+      }
+
+      remoteCtx.restore();
+
+      // Draw nickname label above the pet
+      if (d.nickname) {
+        remoteCtx.save();
+        const labelX = 100 + offsetX;
+        const labelY = 12 + offsetY;
+        remoteCtx.font = '500 10px -apple-system, sans-serif';
+        remoteCtx.textAlign = 'center';
+        // Background pill
+        const textW = remoteCtx.measureText(d.nickname).width + 8;
+        remoteCtx.fillStyle = 'rgba(255,179,167,0.85)';
+        roundRect(remoteCtx, labelX - textW / 2, labelY - 9, textW, 14, 5);
+        remoteCtx.fill();
+        // Text
+        remoteCtx.fillStyle = '#fff';
+        remoteCtx.fillText(d.nickname, labelX, labelY + 1);
+        remoteCtx.restore();
+      }
+    }
+
+    remoteRenderFrame = requestAnimationFrame(renderRemote);
+  }
+
+  renderRemote();
+}
+
+// Helper: draw rounded rect path
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+// Initialize network callbacks when available
+setTimeout(setupNetworkCallbacks, 500);
+
+// Click outside room panel to close
+document.addEventListener('click', function(e) {
+  if (roomPanel.classList.contains('show') && !roomPanel.contains(e.target)) {
+    const menuBtns = document.querySelectorAll('.menu-btn');
+    let clickedMenu = false;
+    menuBtns.forEach(function(btn) { if (btn.contains(e.target)) clickedMenu = true; });
+    if (!clickedMenu) closeRoomPanel();
+  }
+});
+
+// === Start ===
+checkPetMode().then(() => {
+  if (petMode === 'default') {
+    setState('stand');
+  }
+  startAutoBehavior();
+});
+</script>
+</body>
+</html>
