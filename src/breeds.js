@@ -337,6 +337,258 @@ function getPose(state, t) {
       pooping: true,
       poopPhase: Math.min(1, t * 0.25),
     },
+    typing: (() => {
+      // Fast alternating front paw tapping like typing on keyboard
+      const spd = 12;
+      const phase = t * spd;
+      const lTap = Math.max(0, s(phase)) * 10;
+      const rTap = Math.max(0, s(phase + Math.PI)) * 10;
+      return {
+        bodyY: 2 + Math.abs(s(phase * 0.5)) * 1.5,
+        bodyTilt: -3 + s(phase * 0.3) * 1,
+        headY: -2 + s(t * 4) * 1,
+        headTilt: s(t * 3) * 3,
+        legFL: -5 - lTap, legFR: -5 - rTap,
+        legLiftFL: lTap * 1.5, legLiftFR: rTap * 1.5,
+        legBL: 0, legBR: 0,
+        tailWag: s(t * 5) * 6,
+        eyeOpen: 0.85,
+        mouthOpen: 0,
+        breathe: s(t * 2) * 0.6,
+        typing: true,
+        typingPhaseL: Math.max(0, s(phase)),
+        typingPhaseR: Math.max(0, s(phase + Math.PI)),
+      };
+    })(),
+    click: (() => {
+      // Right paw reaches forward with punching motion
+      const clickPhase = t * 6;
+      const punch = Math.max(0, s(clickPhase));
+      return {
+        bodyY: 1 + punch * 2,
+        bodyTilt: -2 - punch * 3,
+        headY: -3 + punch * 1,
+        headTilt: 4 + s(t * 3) * 2,
+        legFL: 0, legFR: -15 - punch * 8,
+        legLiftFL: 0, legLiftFR: 8 + punch * 6,
+        legBL: 0, legBR: 0,
+        tailWag: s(t * 5) * 8,
+        eyeOpen: 1.15,
+        mouthOpen: punch > 0.5 ? 0.15 : 0,
+        breathe: s(t * 2) * 0.6,
+        clicking: true,
+        clickPunch: punch,
+      };
+    })(),
+
+    // ---- Funny / silly poses ----
+
+    sneeze: (() => {
+      // Build-up then explosive sneeze
+      const cycle = (t * 1.5) % 4; // 4-second cycle
+      const buildup = cycle < 2.5;
+      const explode = cycle >= 2.5 && cycle < 3.2;
+      const recover = cycle >= 3.2;
+      if (buildup) {
+        const squint = Math.min(1, cycle / 2.5);
+        return {
+          bodyY: -2 * squint, bodyTilt: -4 * squint,
+          headY: -6 * squint, headTilt: -8 * squint + s(t * 12) * 2 * squint,
+          legFL: 0, legFR: 0, legBL: 0, legBR: 0,
+          tailWag: s(t * 2) * 3,
+          eyeOpen: 0.3 - squint * 0.2, mouthOpen: squint * 0.3,
+          breathe: s(t * 8) * squint * 2,
+        };
+      } else if (explode) {
+        return {
+          bodyY: 6, bodyTilt: 8,
+          headY: 12, headTilt: 15,
+          legFL: -6, legFR: -8, legBL: 4, legBR: 3,
+          legLiftFL: 5, legLiftFR: 6,
+          tailWag: 20,
+          eyeOpen: 0, mouthOpen: 0.9,
+          breathe: 0, sneeze: true,
+        };
+      } else {
+        const r = (cycle - 3.2) / 0.8;
+        return {
+          bodyY: 6 * (1 - r), bodyTilt: 8 * (1 - r),
+          headY: 12 * (1 - r), headTilt: 15 * (1 - r),
+          legFL: 0, legFR: 0, legBL: 0, legBR: 0,
+          tailWag: s(t * 3) * 5,
+          eyeOpen: 0.6 + r * 0.4, mouthOpen: 0.1 * (1 - r),
+          breathe: s(t * 2) * 1, dizzyStars: !recover,
+        };
+      }
+    })(),
+
+    dance: (() => {
+      // Happy bouncing dance - side to side with paw waves
+      const beat = t * 6;
+      const bounce = Math.abs(s(beat)) * 8;
+      const sway = s(beat * 0.5) * 5;
+      const armL = s(beat) > 0;
+      const armR = s(beat + Math.PI) > 0;
+      return {
+        bodyY: -bounce,
+        bodyTilt: sway,
+        headY: -bounce * 0.5 - 2,
+        headTilt: -sway * 1.5 + s(t * 8) * 3,
+        legFL: armL ? -60 : -5,
+        legFR: armR ? -60 : -5,
+        legLiftFL: armL ? 12 : 0,
+        legLiftFR: armR ? 12 : 0,
+        legBL: s(beat) * 3, legBR: s(beat + Math.PI) * 3,
+        tailWag: s(t * 10) * 18 + s(t * 6) * 8,
+        eyeOpen: 1.2,
+        mouthOpen: 0.3 + s(t * 4) * 0.15,
+        breathe: 0,
+        sparkle: true,
+        pawsUp: true,
+        pawWiggle: s(t * 8) * 5,
+      };
+    })(),
+
+    shake: (() => {
+      // Shaking body like after a bath - super fast side-to-side
+      const freq = t * 25;
+      const shakeAmp = 4 + s(t * 2) * 2;
+      return {
+        bodyY: 2,
+        bodyTilt: s(freq) * shakeAmp,
+        headY: -1,
+        headTilt: s(freq + 1) * shakeAmp * 1.5,
+        legFL: s(freq) * 3, legFR: s(freq + Math.PI) * 3,
+        legBL: s(freq + 0.5) * 2, legBR: s(freq + Math.PI + 0.5) * 2,
+        tailWag: s(freq * 0.8) * 20,
+        eyeOpen: 0.3,
+        mouthOpen: 0.15,
+        breathe: 0,
+        shaking: true,
+        shakePhase: s(freq),
+      };
+    })(),
+
+    lick: (() => {
+      // Tongue out, head moves side to side licking
+      const lickPhase = t * 3;
+      const tongueOut = 0.5 + Math.abs(s(lickPhase)) * 0.5;
+      return {
+        bodyY: 2,
+        bodyTilt: -2,
+        headY: 0,
+        headTilt: s(lickPhase) * 12,
+        legFL: 0, legFR: -3, legBL: 0, legBR: 0,
+        tailWag: s(t * 6) * 10 + s(t * 4) * 4,
+        eyeOpen: 0.7 + s(t * 2) * 0.15,
+        mouthOpen: tongueOut,
+        breathe: s(t * 2) * 0.8,
+        licking: true,
+      };
+    })(),
+
+    dizzy: (() => {
+      // Spinning head, wobbling body, spiral eyes
+      const wobble = t * 3;
+      return {
+        bodyY: s(wobble) * 4 + 2,
+        bodyTilt: s(wobble * 0.7) * 8,
+        headY: c(wobble * 1.3) * 3,
+        headTilt: s(wobble) * 15,
+        legFL: s(wobble) * 4, legFR: c(wobble) * 4,
+        legBL: -s(wobble) * 3, legBR: -c(wobble) * 3,
+        tailWag: s(t * 2) * 5,
+        eyeOpen: 0.8,
+        mouthOpen: 0.2,
+        breathe: s(t * 1.5) * 1,
+        spiralEyes: true,
+        dizzyStars: true,
+      };
+    })(),
+
+    hiccup: (() => {
+      // Sudden body jerks with surprised expression
+      const cycle = (t * 2) % 2;
+      const jerk = cycle < 0.15 ? Math.sin(cycle / 0.15 * Math.PI) : 0;
+      return {
+        bodyY: -jerk * 10 + 1,
+        bodyTilt: jerk * 6,
+        headY: -jerk * 8,
+        headTilt: jerk * -5 + s(t * 1.5) * 2,
+        legFL: jerk * -4, legFR: jerk * -3,
+        legLiftFL: jerk * 6, legLiftFR: jerk * 5,
+        legBL: 0, legBR: 0,
+        tailWag: s(t * 4) * 6 + jerk * 12,
+        eyeOpen: jerk > 0.3 ? 1.3 : 1,
+        mouthOpen: jerk > 0.3 ? 0.5 : 0,
+        breathe: s(t * 2) * 1,
+        hiccup: jerk > 0.3,
+      };
+    })(),
+
+    zoomies: (() => {
+      // Crazy fast erratic running - pure chaos energy
+      const spd = t * 12;
+      const chaos = s(spd) * s(spd * 1.7) * s(spd * 0.3);
+      return {
+        bodyY: -Math.abs(s(spd * 1.5)) * 12 + 2,
+        bodyTilt: s(spd * 0.8) * 6 + chaos * 4,
+        headY: s(spd + 1) * 4 - 3,
+        headTilt: s(spd * 1.2) * 10,
+        legFL: s(spd * 2) * 12, legFR: s(spd * 2 + Math.PI) * 12,
+        legBL: s(spd * 2 + 1) * 10, legBR: s(spd * 2 + Math.PI + 1) * 10,
+        legLiftFL: Math.max(0, s(spd * 2)) * 14,
+        legLiftFR: Math.max(0, s(spd * 2 + Math.PI)) * 14,
+        tailWag: s(spd) * 22,
+        eyeOpen: 1.25,
+        mouthOpen: 0.5 + s(t * 5) * 0.2,
+        breathe: 0,
+        sparkle: true,
+      };
+    })(),
+
+    roll: (() => {
+      // Rolling on the ground playfully
+      const rollPhase = t * 3;
+      const onBack = s(rollPhase) > 0;
+      return {
+        bodyY: 14 + s(rollPhase * 2) * 3,
+        bodyTilt: s(rollPhase) * 25,
+        headY: 10 + c(rollPhase) * 3,
+        headTilt: s(rollPhase) * 20,
+        legFL: onBack ? -70 : -5,
+        legFR: onBack ? -65 : -8,
+        legBL: onBack ? -80 : 0,
+        legBR: onBack ? -75 : 2,
+        legLiftFL: onBack ? 8 : 0,
+        legLiftFR: onBack ? 10 : 0,
+        tailWag: s(t * 6) * 10,
+        eyeOpen: 0.6 + s(t * 4) * 0.2,
+        mouthOpen: 0.2 + Math.abs(s(t * 3)) * 0.2,
+        breathe: 0,
+        pawsUp: onBack,
+        pawWiggle: s(t * 6) * 5,
+      };
+    })(),
+
+    flop: (() => {
+      // Dramatic flop to the side - playing dead
+      const flopT = Math.min(1, t * 0.8);
+      const twitch = flopT >= 1 ? s(t * 6) * 0.5 : 0;
+      return {
+        bodyY: 16 * flopT,
+        bodyTilt: 20 * flopT,
+        headY: 14 * flopT,
+        headTilt: 25 * flopT + twitch,
+        legFL: -60 * flopT, legFR: -50 * flopT,
+        legBL: -70 * flopT, legBR: -65 * flopT,
+        tailWag: s(t * 0.5) * 2 * flopT,
+        eyeOpen: flopT >= 1 ? 0 : (1 - flopT * 0.8),
+        mouthOpen: flopT >= 1 ? (twitch > 0 ? 0.1 : 0) : 0.3 * flopT,
+        breathe: flopT >= 1 ? s(t * 0.6) * 0.8 : 0,
+        tongue: flopT >= 1,
+      };
+    })(),
   };
   return poses[state] || poses.stand;
 }
@@ -554,6 +806,87 @@ function renderPet(ctx, breed, state, t, size, accessories, dir) {
     ctx.globalAlpha = 1;
   }
 
+  // Typing indicator - minimal SF-style keyboard icon
+  if (pose.typing) {
+    const ix = headCX + 20;
+    const iy = headCY - 28;
+    const bounce = Math.sin(t * 8) * 1.5;
+    ctx.save();
+    ctx.globalAlpha = 0.75;
+    ctx.translate(ix, iy + bounce);
+    // Rounded pill background
+    const pw = 22, ph = 14, pr = 5;
+    ctx.fillStyle = 'rgba(0,0,0,0.06)';
+    ctx.beginPath();
+    ctx.roundRect(- pw/2, -ph/2, pw, ph, pr);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+    // Tiny keyboard keys (3x2 grid)
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    for (let r = 0; r < 2; r++) {
+      for (let c = 0; c < 3; c++) {
+        const kx = -7 + c * 5.5;
+        const ky = -3.5 + r * 5;
+        ctx.beginPath();
+        ctx.roundRect(kx, ky, 4, 3.5, 0.8);
+        ctx.fill();
+      }
+    }
+    // Space bar
+    ctx.beginPath();
+    ctx.roundRect(-5, 3, 10, 2.5, 0.8);
+    ctx.fill();
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  // Click indicator - minimal SF-style cursor icon
+  if (pose.clicking) {
+    const punch = pose.clickPunch || 0;
+    const ix = headCX + 22;
+    const iy = headCY - 28;
+    const bounce = punch * -2;
+    ctx.save();
+    ctx.globalAlpha = 0.75;
+    ctx.translate(ix, iy + bounce);
+    // Pill background
+    const pw = 18, ph = 18, pr = 6;
+    ctx.fillStyle = 'rgba(0,0,0,0.06)';
+    ctx.beginPath();
+    ctx.roundRect(-pw/2, -ph/2, pw, ph, pr);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+    // macOS cursor arrow
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    ctx.moveTo(-3, -5);
+    ctx.lineTo(-3, 5);
+    ctx.lineTo(0, 3);
+    ctx.lineTo(3, 6);
+    ctx.lineTo(4, 5);
+    ctx.lineTo(1.5, 2);
+    ctx.lineTo(4, 2);
+    ctx.closePath();
+    ctx.fill();
+    // Click ripple
+    if (punch > 0.5) {
+      const rAlpha = (1 - punch) * 1.2;
+      ctx.globalAlpha = Math.max(0, rAlpha) * 0.4;
+      ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+      ctx.lineWidth = 0.8;
+      const radius = 6 + punch * 6;
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
   if (pose.pooping) {
     const phase = pose.poopPhase || 0;
     const bagX = bodyCX + 20;
@@ -635,6 +968,88 @@ function renderPet(ctx, breed, state, t, size, accessories, dir) {
     ctx.fillStyle = '#AAA';
     const dotY = Math.sin(t * 0.8) * 3;
     ctx.fillText('...', headCX + 12, headCY - 18 + dotY);
+    ctx.globalAlpha = 1;
+  }
+
+  // Sneeze explosion particles
+  if (pose.sneeze) {
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 0.8 - Math.PI * 0.1;
+      const dist = 15 + Math.sin(t * 8 + i) * 8;
+      const px = headCX + headOffX + Math.cos(angle) * dist;
+      const py = headCY + 8 + Math.sin(angle) * dist * 0.5;
+      ctx.globalAlpha = 0.5 + Math.sin(t * 6 + i * 2) * 0.3;
+      ctx.fillStyle = '#88CCFF';
+      ctx.beginPath();
+      ctx.arc(px, py, 2 + Math.sin(t * 4 + i) * 1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // Shake water droplets
+  if (pose.shaking) {
+    for (let i = 0; i < 5; i++) {
+      const angle = (t * 15 + i * 72) * Math.PI / 180;
+      const dist = 30 + Math.sin(t * 8 + i * 3) * 10;
+      const dx = bodyCX + Math.cos(angle) * dist;
+      const dy = bodyCY - 10 + Math.sin(angle) * dist * 0.6;
+      ctx.globalAlpha = 0.4 + Math.sin(t * 6 + i) * 0.3;
+      ctx.fillStyle = '#AAD8FF';
+      ctx.beginPath();
+      // Teardrop shape
+      ctx.moveTo(dx, dy - 3);
+      ctx.quadraticCurveTo(dx + 2.5, dy, dx, dy + 3);
+      ctx.quadraticCurveTo(dx - 2.5, dy, dx, dy - 3);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // Dizzy floating stars
+  if (pose.dizzyStars) {
+    const stars = ['⭐', '💫', '✨'];
+    for (let i = 0; i < 3; i++) {
+      const orbitAngle = t * 3 + (i * Math.PI * 2 / 3);
+      const ox = headCX + Math.cos(orbitAngle) * 22;
+      const oy = headCY - 20 + Math.sin(orbitAngle) * 8;
+      ctx.globalAlpha = 0.6 + Math.sin(t * 4 + i) * 0.3;
+      ctx.font = '10px Arial';
+      ctx.fillText(stars[i], ox, oy);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // Hiccup bubble
+  if (pose.hiccup) {
+    const bubbleY = headCY - 25 - Math.abs(Math.sin(t * 8)) * 10;
+    ctx.globalAlpha = 0.5;
+    ctx.strokeStyle = '#88CCFF';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(headCX + 18, bubbleY, 5, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 0.2;
+    ctx.fillStyle = '#CCECFF';
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  // Tongue drip for licking
+  if (pose.licking) {
+    const dripY = Math.sin(t * 2) * 3;
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = '#FF8888';
+    ctx.font = '8px Arial';
+    ctx.fillText('💗', headCX + 20, headCY - 15 + dripY);
+    ctx.globalAlpha = 1;
+  }
+
+  // Flop tongue hanging out
+  if (pose.tongue) {
+    ctx.globalAlpha = 0.6;
+    ctx.font = '10px Arial';
+    ctx.fillText('😵', headCX + 20, headCY - 18 + Math.sin(t * 0.5) * 2);
     ctx.globalAlpha = 1;
   }
 
@@ -1097,7 +1512,20 @@ function drawFace(ctx, c, sh, pose, isCat) {
   const eyeR = 3.5 * Math.min(eyeOpen, 1.3);
 
   // --- Eyes (shared across all animals) ---
-  if (eyeOpen >= 0.8) {
+  if (pose.spiralEyes) {
+    // Dizzy spiral eyes
+    ctx.strokeStyle = '#333'; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
+    for (const ex of [eyeLX, eyeRX]) {
+      ctx.beginPath();
+      for (let a = 0; a < Math.PI * 4; a += 0.15) {
+        const r = a * 0.8;
+        const px = ex + Math.cos(a) * r;
+        const py = eyeY + Math.sin(a) * r;
+        if (a === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+  } else if (eyeOpen >= 0.8) {
     drawCircle(ctx, eyeLX, eyeY, eyeR, '#111', null);
     drawCircle(ctx, eyeRX, eyeY, eyeR, '#111', null);
     drawCircle(ctx, eyeLX - 1, eyeY - 1.5, eyeR * 0.4, '#FFF', null);

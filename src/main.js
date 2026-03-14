@@ -50,8 +50,8 @@ function createPetWindow() {
   const { width: screenW, height: screenH } = screen.getPrimaryDisplay().workAreaSize;
   const config = loadConfig();
   const petSize = config.petSize || 200;
-  const winW = petSize + 40;
-  const winH = petSize + 60; // Extra space for chat input + speech bubble
+  const winW = petSize + 10;
+  const winH = petSize + 30;
 
   mainWindow = new BrowserWindow({
     width: winW,
@@ -107,7 +107,7 @@ function setupIPC() {
     const config = loadConfig();
     const size = config.petSize || 200;
     const bounds = mainWindow.getBounds();
-    mainWindow.setBounds({ x: bounds.x + dx, y: bounds.y + dy, width: size + 40, height: size + 60 });
+    mainWindow.setBounds({ x: bounds.x + dx, y: bounds.y + dy, width: size + 10, height: size + 30 });
   });
 
   ipcMain.handle('get-bounds', () => {
@@ -125,7 +125,7 @@ function setupIPC() {
     if (!mainWindow) return;
     const config = loadConfig();
     const size = config.petSize || 200;
-    mainWindow.setBounds({ x, y, width: size + 40, height: size + 60 });
+    mainWindow.setBounds({ x, y, width: size + 10, height: size + 30 });
   });
 
   // Settings: load config
@@ -160,7 +160,7 @@ function setupIPC() {
       mainWindow.webContents.send('config-changed', old);
       const size = old.petSize || 200;
       const bounds = mainWindow.getBounds();
-      mainWindow.setBounds({ x: bounds.x, y: bounds.y, width: size + 40, height: size + 60 });
+      mainWindow.setBounds({ x: bounds.x, y: bounds.y, width: size + 10, height: size + 30 });
     }
   });
 
@@ -497,11 +497,24 @@ app.whenReady().then(() => {
   ensureDirs();
   setupIPC();
 
-  // Set Dock icon
-  const iconPath = path.join(__dirname, '..', 'build', 'icon.png');
-  if (fs.existsSync(iconPath)) {
-    const dockIcon = nativeImage.createFromPath(iconPath);
-    if (app.dock) app.dock.setIcon(dockIcon);
+  // Animated Dock icon
+  const framesDir = path.join(__dirname, '..', 'build', 'icon-frames');
+  if (app.dock && fs.existsSync(framesDir)) {
+    const frameFiles = fs.readdirSync(framesDir).filter(f => f.endsWith('.png')).sort();
+    if (frameFiles.length > 0) {
+      const dockFrames = frameFiles.map(f => nativeImage.createFromPath(path.join(framesDir, f)));
+      let frameIdx = 0;
+      app.dock.setIcon(dockFrames[0]);
+      setInterval(() => {
+        frameIdx = (frameIdx + 1) % dockFrames.length;
+        try { app.dock.setIcon(dockFrames[frameIdx]); } catch(e) {}
+      }, 200);
+    }
+  } else {
+    const iconPath = path.join(__dirname, '..', 'build', 'icon.png');
+    if (fs.existsSync(iconPath) && app.dock) {
+      app.dock.setIcon(nativeImage.createFromPath(iconPath));
+    }
   }
 
   createPetWindow();

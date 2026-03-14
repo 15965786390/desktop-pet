@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <style>
   * { margin: 0; padding: 0; }
+  *::-webkit-scrollbar { display: none; }
+  * { scrollbar-width: none; }
   html, body {
     width: 240px;
     height: 240px;
@@ -138,20 +140,20 @@
   .menu-btn.danger:hover { background: #ff3b30; color: #fff; }
 
   #emotion {
-    position: absolute;
+    position: fixed;
     top: -5px;
-    right: 10px;
+    left: 100px;
+    transform: translateX(-50%) translateY(5px);
     font-size: 24px;
     opacity: 0;
     transition: opacity 0.3s ease, transform 0.3s ease;
-    transform: translateY(5px);
     pointer-events: none;
     filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15));
     z-index: 998;
   }
   #emotion.show {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(-50%) translateY(0);
   }
   #chat-input-wrap {
     position: fixed;
@@ -432,14 +434,14 @@
   <div class="menu-divider"></div>
   <button class="menu-btn danger" onclick="menuAction('quit')"><span class="icon">✕</span><span class="label">退出</span></button>
 </div>
-<span id="emotion"></span>
 <div id="speech-bubble"></div>
 <div id="chat-input-wrap"><input id="chat-input" placeholder="和我说话..." maxlength="50"></div>
 
+<span id="emotion"></span>
 <!-- Custom pet (user uploaded image) -->
 <div id="custom-pet-container" style="display:none; width:200px; height:200px; cursor:grab; position:relative;">
   <img id="custom-pet-img" src="" style="width:100%; height:100%; object-fit:contain;">
-  <span id="custom-emotion" style="position:absolute;top:-5px;right:10px;font-size:24px;opacity:0;transition:opacity 0.3s;pointer-events:none;"></span>
+  <span id="custom-emotion" style="position:absolute;top:-5px;left:50%;transform:translateX(-50%);font-size:24px;opacity:0;transition:opacity 0.3s;pointer-events:none;"></span>
 </div>
 
 <div id="tip-banner"></div>
@@ -930,6 +932,16 @@ const frames = {
   jump:    { ids: ['frame-jump'],           speed: 0,   canBreath: false, duration: 2000, bounce: true },
   typing:  { ids: ['frame-typing1', 'frame-typing2'], speed: 120, canBreath: false },
   click:   { ids: ['frame-click'],          speed: 0,   canBreath: false },
+  // Funny poses - fallback to existing SVG frames for default dog
+  sneeze:  { ids: ['frame-stretch'],        speed: 0,   canBreath: false, duration: 4000 },
+  dance:   { ids: ['frame-jump'],           speed: 0,   canBreath: false, duration: 4000, bounce: true },
+  shake:   { ids: ['frame-stand'],          speed: 0,   canBreath: false, duration: 3000, spin: true },
+  lick:    { ids: ['frame-tilt'],           speed: 0,   canBreath: false, duration: 3000 },
+  dizzy:   { ids: ['frame-chase'],          speed: 0,   canBreath: false, duration: 3500, spin: true },
+  hiccup:  { ids: ['frame-stand'],          speed: 0,   canBreath: false, duration: 4000 },
+  zoomies: { ids: ['frame-walk1', 'frame-walk2'], speed: 80, canBreath: false, duration: 3000 },
+  roll:    { ids: ['frame-sit'],            speed: 0,   canBreath: false, duration: 4000 },
+  flop:    { ids: ['frame-sleep'],          speed: 0,   canBreath: false, duration: 5000 },
 };
 
 let currentState = 'stand';
@@ -1070,15 +1082,25 @@ if (window.petAPI.onInputEvent) {
 
 // Life-like behavior engine
 const behaviors = [
-  { name: 'walk', weight: 25, emotion: null },
-  { name: 'stand', weight: 20, emotion: null },
-  { name: 'sit', weight: 15, emotion: null },
-  { name: 'yawn', weight: 8, emotion: '😪', after: 'sleep' },
-  { name: 'stretch', weight: 8, emotion: '🐾', after: 'stand' },
-  { name: 'tilt', weight: 6, emotion: '❓', after: 'stand' },
-  { name: 'chase', weight: 5, emotion: '🌀', after: 'sit' },
-  { name: 'jump', weight: 5, emotion: '⭐', after: 'stand' },
-  { name: 'beg', weight: 4, emotion: '🥺', after: 'sit' },
+  { name: 'walk', weight: 20, emotion: null },
+  { name: 'stand', weight: 15, emotion: null },
+  { name: 'sit', weight: 12, emotion: null },
+  { name: 'yawn', weight: 6, emotion: '😪', after: 'sleep' },
+  { name: 'stretch', weight: 6, emotion: '🐾', after: 'stand' },
+  { name: 'tilt', weight: 5, emotion: '❓', after: 'stand' },
+  { name: 'chase', weight: 4, emotion: '🌀', after: 'sit' },
+  { name: 'jump', weight: 4, emotion: '⭐', after: 'stand' },
+  { name: 'beg', weight: 3, emotion: '🥺', after: 'sit' },
+  // Funny behaviors
+  { name: 'sneeze', weight: 4, emotion: '🤧', after: 'stand' },
+  { name: 'dance', weight: 4, emotion: '💃', after: 'stand' },
+  { name: 'shake', weight: 3, emotion: '💦', after: 'stand' },
+  { name: 'lick', weight: 3, emotion: '😋', after: 'stand' },
+  { name: 'dizzy', weight: 2, emotion: '😵‍💫', after: 'sit' },
+  { name: 'hiccup', weight: 3, emotion: '😯', after: 'stand' },
+  { name: 'zoomies', weight: 3, emotion: '⚡', after: 'sit' },
+  { name: 'roll', weight: 3, emotion: '🤸', after: 'stand' },
+  { name: 'flop', weight: 2, emotion: '😴', after: 'stand' },
 ];
 
 function pickRandomBehavior() {
