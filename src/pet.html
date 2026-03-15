@@ -1446,13 +1446,20 @@ pet.addEventListener('dblclick', handleDblClick);
 breedCanvas.addEventListener('dblclick', handleDblClick);
 document.getElementById('custom-pet-container').addEventListener('dblclick', handleDblClick);
 
-// Hover
+// Hover → show chat
 function handleHover() {
   lastInteraction = Date.now();
   if (currentState === 'stand' || currentState === 'sit') showEmotion('❤️', 1500);
+  if (!chatVisible) {
+    chatVisible = true;
+    const chatWrapEl = document.getElementById('chat-input-wrap');
+    chatWrapEl.style.top = currentPetSize + 'px';
+    chatWrapEl.classList.add('show');
+  }
 }
 pet.addEventListener('mouseenter', handleHover);
 breedCanvas.addEventListener('mouseenter', handleHover);
+document.getElementById('custom-pet-container').addEventListener('mouseenter', handleHover);
 
 // Tray menu
 window.petAPI.onAction((action) => {
