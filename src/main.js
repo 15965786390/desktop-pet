@@ -25,7 +25,7 @@ if (!gotLock) {
 // === Data paths ===
 const userDataPath = app.getPath('userData');
 const petsDir = path.join(userDataPath, 'pets');
-const recordingsDir = path.join(userDataPath, 'recordings');
+const recordingsDir = path.join(app.getPath('downloads'), 'desktop-pet-recordings');
 const configPath = path.join(userDataPath, 'config.json');
 
 function ensureDirs() {
