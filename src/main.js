@@ -556,13 +556,28 @@ function setupIPC() {
   // Clear chat history
   ipcMain.on('claude-clear-history', () => { chatHistory = []; });
 
-  // === Recording: save audio file ===
+  // === Recording: save audio file as MP3 ===
   ipcMain.handle('save-recording', async (_, base64Data, filename) => {
     try {
-      const filePath = path.join(recordingsDir, filename);
+      const { execFile } = require('child_process');
+      const webmPath = path.join(recordingsDir, filename);
+      const mp3Filename = filename.replace('.webm', '.mp3');
+      const mp3Path = path.join(recordingsDir, mp3Filename);
       const buffer = Buffer.from(base64Data, 'base64');
-      fs.writeFileSync(filePath, buffer);
-      return { ok: true, filePath };
+      fs.writeFileSync(webmPath, buffer);
+
+      // Convert webm to mp3 via ffmpeg
+      return await new Promise((resolve) => {
+        execFile('ffmpeg', ['-y', '-i', webmPath, '-codec:a', 'libmp3lame', '-q:a', '2', mp3Path], (err) => {
+          if (!err && fs.existsSync(mp3Path)) {
+            try { fs.unlinkSync(webmPath); } catch(e) {}
+            resolve({ ok: true, filePath: mp3Path });
+          } else {
+            // ffmpeg failed, keep webm
+            resolve({ ok: true, filePath: webmPath });
+          }
+        });
+      });
     } catch (e) {
       return { error: e.message };
     }
