@@ -2072,13 +2072,42 @@ chatInput.addEventListener('keydown', async (e) => {
   }
 });
 
-// === Recording System ===
+// === Recording System (Free - no API key needed) ===
 let isRecording = false;
 let mediaRecorder = null;
 let recordingChunks = [];
 let recordingTimer = null;
 let recordingSeconds = 0;
-const MAX_RECORDING_SECONDS = 120; // 2 minutes max
+const MAX_RECORDING_SECONDS = 120;
+
+// Browser built-in speech recognition (free)
+let speechRecognition = null;
+let speechFinalText = '';
+let speechInterimText = '';
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (SpeechRecognition) {
+  speechRecognition = new SpeechRecognition();
+  speechRecognition.continuous = true;
+  speechRecognition.interimResults = true;
+  speechRecognition.lang = 'zh-CN';
+  speechRecognition.onresult = (event) => {
+    speechInterimText = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      if (event.results[i].isFinal) {
+        speechFinalText += event.results[i][0].transcript;
+      } else {
+        speechInterimText += event.results[i][0].transcript;
+      }
+    }
+    // Show live transcription
+    const live = speechFinalText + speechInterimText;
+    if (live) showSpeech('🗣️ ' + live, 30000);
+  };
+  speechRecognition.onerror = (e) => { /* ignore no-speech */ };
+  speechRecognition.onend = () => {
+    if (isRecording) try { speechRecognition.start(); } catch(e) {}
+  };
+}
 
 function toggleRecording() {
   if (isRecording) {
@@ -2107,10 +2136,17 @@ async function startRecording() {
     mediaRecorder.start();
     isRecording = true;
     recordingSeconds = 0;
+    speechFinalText = '';
+    speechInterimText = '';
 
-    // UI updates
+    // Start free speech recognition
+    if (speechRecognition) {
+      try { speechRecognition.start(); } catch(e) {}
+    }
+
     document.getElementById('chat-mic-btn').classList.add('recording');
     document.getElementById('recording-indicator').classList.add('show');
+    showSpeech('🎤 录音中...', 999999);
     updateRecTimer();
 
     recordingTimer = setInterval(() => {
@@ -2131,6 +2167,12 @@ function stopRecording() {
   isRecording = false;
   mediaRecorder.stop();
   clearInterval(recordingTimer);
+
+  // Stop speech recognition
+  if (speechRecognition) {
+    try { speechRecognition.stop(); } catch(e) {}
+  }
+
   document.getElementById('chat-mic-btn').classList.remove('recording');
   document.getElementById('recording-indicator').classList.remove('show');
 }
@@ -2142,46 +2184,29 @@ function updateRecTimer() {
 }
 
 async function processRecording(blob) {
-  showSpeech('💾 保存录音中...', 5000);
-  setState('tilt', 'stand');
-
-  // Convert blob to base64
+  // Save audio file
   const reader = new FileReader();
   reader.onloadend = async () => {
     const base64 = reader.result.split(',')[1];
     const filename = 'rec-' + Date.now() + '.webm';
+    try {
+      const saveResult = await window.petAPI.saveRecording(base64, filename);
+      if (saveResult && !saveResult.error) {
+        showSpeech('💾 录音已保存~', 2000);
+      }
+    } catch(e) { /* saving is optional */ }
 
-    // Save file
-    const saveResult = await window.petAPI.saveRecording(base64, filename);
-    if (!saveResult || saveResult.error) {
-      showSpeech('保存失败了~ 😢', 3000);
-      return;
+    // Use the free speech recognition result
+    const text = speechFinalText.trim();
+    if (text) {
+      showSpeech('🗣️ ' + text, 3000);
+      lastInteraction = Date.now();
+      setTimeout(async () => {
+        await petReply(text);
+      }, 1500);
+    } else {
+      showSpeech('💾 录音已保存（' + recordingSeconds + '秒）', 3000);
     }
-
-    // Transcribe
-    showSpeech('🎯 转写中...', 10000);
-    showEmotion('💭', 2000);
-    const transcribeResult = await window.petAPI.transcribeAudio(saveResult.filePath);
-
-    if (!transcribeResult || transcribeResult.error) {
-      showSpeech(transcribeResult ? transcribeResult.text : '转写失败了~ 😢', 4000);
-      return;
-    }
-
-    const text = transcribeResult.text;
-    if (!text || !text.trim()) {
-      showSpeech('没有听到声音哦~ 🤔', 3000);
-      return;
-    }
-
-    // Show transcribed text then send to AI
-    showSpeech('🗣️ ' + text, 3000);
-    lastInteraction = Date.now();
-
-    // Wait a bit then send to pet AI
-    setTimeout(async () => {
-      await petReply(text);
-    }, 1500);
   };
   reader.readAsDataURL(blob);
 }
