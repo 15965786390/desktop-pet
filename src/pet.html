@@ -163,15 +163,16 @@
     z-index: 1000;
     opacity: 0;
     transition: opacity 0.25s ease, transform 0.25s ease;
-    background: rgba(255,255,255,0.88);
+    background: rgba(255,255,255,0.92);
     backdrop-filter: blur(20px) saturate(1.6);
     -webkit-backdrop-filter: blur(20px) saturate(1.6);
-    border-radius: 20px;
-    padding: 5px 5px 5px 12px;
-    box-shadow: 0 2px 16px rgba(0,0,0,0.12), 0 0 0 0.5px rgba(0,0,0,0.06);
+    border-radius: 22px;
+    border: 1px solid rgba(0,0,0,0.06);
+    padding: 4px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.10), 0 0 0 0.5px rgba(0,0,0,0.04);
     align-items: center;
-    gap: 4px;
-    width: 200px;
+    gap: 3px;
+    width: 210px;
   }
   #chat-input-wrap.show {
     display: flex;
@@ -180,8 +181,8 @@
   }
   #chat-input {
     border: none;
-    padding: 8px 0;
-    font-size: 14px;
+    padding: 7px 4px 7px 8px;
+    font-size: 13px;
     flex: 1;
     min-width: 0;
     outline: none;
@@ -190,45 +191,47 @@
     color: #1c1c1e;
     -webkit-app-region: no-drag;
   }
-  #chat-input::placeholder { color: #c7c7cc; }
+  #chat-input::placeholder { color: #c7c7cc; font-size: 12px; }
   #chat-send-btn {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    border: none;
-    background: #007aff;
-    color: #fff;
-    font-size: 15px;
+    border: 1.5px solid #007aff;
+    background: transparent;
+    color: #007aff;
+    font-size: 13px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: background 0.15s, transform 0.1s;
+    transition: all 0.15s;
     -webkit-app-region: no-drag;
   }
-  #chat-send-btn:hover { background: #0066d6; }
+  #chat-send-btn:hover { background: #007aff; color: #fff; }
   #chat-send-btn:active { transform: scale(0.9); }
+  #chat-send-btn.empty { border-color: #c7c7cc; color: #c7c7cc; opacity: 0.5; }
   #chat-mic-btn {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    border: none;
-    background: #f2f2f7;
-    color: #636366;
-    font-size: 15px;
+    border: 1.5px solid #8e8e93;
+    background: transparent;
+    color: #8e8e93;
+    font-size: 13px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: background 0.15s, transform 0.1s, box-shadow 0.3s;
+    transition: all 0.15s, box-shadow 0.3s;
     -webkit-app-region: no-drag;
   }
-  #chat-mic-btn:hover { background: #e5e5ea; }
+  #chat-mic-btn:hover { border-color: #636366; color: #636366; }
   #chat-mic-btn:active { transform: scale(0.9); }
   #chat-mic-btn.recording {
     background: #ff3b30;
+    border-color: #ff3b30;
     color: #fff;
     animation: mic-pulse 1s ease-in-out infinite;
   }
@@ -561,7 +564,7 @@
 </div>
 <div id="speech-bubble"></div>
 <div id="recording-indicator"><span class="rec-dot"></span><span id="rec-timer">0:00</span></div>
-<div id="chat-input-wrap"><input id="chat-input" placeholder="和我说话..." maxlength="50"><button id="chat-mic-btn" onclick="toggleRecording()">🎤</button><button id="chat-send-btn" onclick="sendChat()">↑</button></div>
+<div id="chat-input-wrap"><button id="chat-mic-btn" onclick="toggleRecording()">🎤</button><input id="chat-input" placeholder="说点什么..." maxlength="50"><button id="chat-send-btn" onclick="sendChat()">↑</button></div>
 
 <span id="emotion"></span>
 <!-- Custom pet (user uploaded image) -->
@@ -1938,7 +1941,14 @@ function proactiveInteraction() {
 // === Chat System ===
 const chatInput = document.getElementById('chat-input');
 const chatWrap = document.getElementById('chat-input-wrap');
+const chatSendBtn = document.getElementById('chat-send-btn');
 let chatVisible = false;
+
+// Send button empty state
+chatSendBtn.classList.add('empty');
+chatInput.addEventListener('input', () => {
+  chatSendBtn.classList.toggle('empty', !chatInput.value.trim());
+});
 
 function toggleChat() {
   chatVisible = !chatVisible;
