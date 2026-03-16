@@ -1,6 +1,6 @@
 {
   "name": "desktop-pet",
-  "version": "1.5.5",
+  "version": "1.5.6",
   "description": "可爱的桌面宠物小狗",
   "main": "src/main.js",
   "scripts": {
