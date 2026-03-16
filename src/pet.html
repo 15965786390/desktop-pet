@@ -157,8 +157,9 @@
   }
   #chat-input-wrap {
     position: absolute;
-    left: 110px;
-    transform: translateX(-50%) translateY(-6px) scale(0.92);
+    left: 10px;
+    right: 10px;
+    transform: translateY(-6px) scale(0.92);
     display: none;
     z-index: 1000;
     opacity: 0;
@@ -172,12 +173,12 @@
     box-shadow: 0 2px 16px rgba(0,0,0,0.10), 0 0 0 0.5px rgba(0,0,0,0.04);
     align-items: center;
     gap: 3px;
-    width: 210px;
+    max-width: 220px;
   }
   #chat-input-wrap.show {
     display: flex;
     opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1);
+    transform: translateY(0) scale(1);
   }
   #chat-input {
     border: none;
@@ -1456,7 +1457,7 @@ function handleHover() {
     chatVisible = true;
     const chatWrapEl = document.getElementById('chat-input-wrap');
     chatWrapEl.style.top = currentPetSize + 'px';
-    chatWrapEl.style.left = (currentPetSize * 0.55) + 'px';
+    /* left/right set by CSS */
     chatWrapEl.classList.add('show');
   }
 }
@@ -1953,7 +1954,7 @@ chatInput.addEventListener('input', () => {
 function toggleChat() {
   chatVisible = !chatVisible;
   chatWrap.style.top = currentPetSize + 'px';
-  chatWrap.style.left = (currentPetSize * 0.55) + 'px';
+  /* left/right set by CSS */
   chatWrap.classList.toggle('show', chatVisible);
   if (chatVisible) chatInput.focus();
 }
